@@ -1541,17 +1541,19 @@ public class LauncherModel extends BroadcastReceiver
 
                 waitForIdle();
 
+                // third step
+                if (DEBUG_LOADERS) Log.d(TAG, "step 3: loading all shortcuts");
                 if (FeatureFlags.NO_ALL_APPS_ICON) {
                     verifyApplications();
                 }
 
-                // third step
-                if (DEBUG_LOADERS) Log.d(TAG, "step 3: loading all shortcuts");
                 waitForIdle();
 
                 // fourth step
                 if (DEBUG_LOADERS) Log.d(TAG, "step 4: loading deep shortcuts");
                 loadAndBindDeepShortcuts();
+
+                mBgAllAppsList.added.clear();
             }
 
             // Clear out this reference, otherwise we end up holding it until all of the
@@ -3207,9 +3209,14 @@ public class LauncherModel extends BroadcastReceiver
             final HashMap<ComponentName, AppInfo> addedOrUpdatedApps = new HashMap<>();
 
             if (added != null) {
-                addAppsToAllApps(context, added);
-                for (AppInfo ai : added) {
-                    addedOrUpdatedApps.put(ai.componentName, ai);
+                if (FeatureFlags.NO_ALL_APPS_ICON) {
+                    final ArrayList<ItemInfo> addedInfos = new ArrayList<ItemInfo>(added);
+                    addAndBindAddedWorkspaceItems(context, addedInfos);
+                } else {
+                    addAppsToAllApps(context, added);
+                    for (AppInfo ai : added) {
+                        addedOrUpdatedApps.put(ai.componentName, ai);
+                    }
                 }
             }
 
