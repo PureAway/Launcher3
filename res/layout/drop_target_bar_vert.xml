@@ -24,14 +24,14 @@
     android:paddingTop="@dimen/vert_drop_target_vertical_gap" >
 
     <!-- Delete target -->
-    <com.android.launcher3.DeleteDropTarget
+ <!--   <com.android.launcher3.DeleteDropTarget
         android:layout_width="match_parent"
         android:layout_height="@dimen/dynamic_grid_drop_target_size"
         android:gravity="center"
         android:paddingLeft="@dimen/vert_drop_target_horizontal_gap"
         android:paddingRight="@dimen/vert_drop_target_horizontal_gap"
         android:id="@+id/delete_target_text"
-        android:textColor="@android:color/white" />
+        android:textColor="@android:color/white" />-->
 
     <!-- Uninstall target -->
     <com.android.launcher3.UninstallDropTarget

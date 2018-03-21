@@ -22,12 +22,12 @@
     android:layout_gravity="center_horizontal|top"
     android:focusable="false">
 
-    <FrameLayout
+<!--    <FrameLayout
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1" >
 
-        <!-- Delete target -->
+        &lt;!&ndash; Delete target &ndash;&gt;
 
         <com.android.launcher3.DeleteDropTarget
             launcher:hideParentOnDisable="true"
@@ -38,7 +38,7 @@
             android:id="@+id/delete_target_text"
             style="@style/DropTargetButton"
             android:text="@string/remove_drop_target_label" />
-    </FrameLayout>
+    </FrameLayout>-->
 
     <FrameLayout
         android:layout_width="0dp"
