@@ -56,7 +56,7 @@ class AppWidgetManagerCompatV16 extends AppWidgetManagerCompat {
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     @Override
     public boolean bindAppWidgetIdIfAllowed(int appWidgetId, AppWidgetProviderInfo info,
-            Bundle options) {
+                                            Bundle options) {
         if (Utilities.ATLEAST_JB_MR1) {
             return mAppWidgetManager.bindAppWidgetIdIfAllowed(appWidgetId, info.provider, options);
         } else {
@@ -65,8 +65,8 @@ class AppWidgetManagerCompatV16 extends AppWidgetManagerCompat {
     }
 
     @Override
-    public  boolean bindAppWidgetIdSkipBindPermission(int appWidgetId,AppWidgetProviderInfo info,Bundle options ){
-          return mAppWidgetManager.bindAppWidgetIdSkipBindPermission(appWidgetId,info.provider,options,true);
+    public boolean bindAppWidgetIdSkipBindPermission(int appWidgetId, AppWidgetProviderInfo info, Bundle options) {
+        return true;
     }
 
     @Override
@@ -76,7 +76,7 @@ class AppWidgetManagerCompatV16 extends AppWidgetManagerCompat {
 
     @Override
     public void startConfigActivity(AppWidgetProviderInfo info, int widgetId, Activity activity,
-            AppWidgetHost host, int requestCode) {
+                                    AppWidgetHost host, int requestCode) {
         Intent intent = new Intent(AppWidgetManager.ACTION_APPWIDGET_CONFIGURE);
         intent.setComponent(info.configure);
         intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId);
@@ -96,7 +96,7 @@ class AppWidgetManagerCompatV16 extends AppWidgetManagerCompat {
 
     @Override
     public Bitmap getBadgeBitmap(LauncherAppWidgetProviderInfo info, Bitmap bitmap,
-            int imageWidth, int imageHeight) {
+                                 int imageWidth, int imageHeight) {
         return bitmap;
     }
 
@@ -120,10 +120,11 @@ class AppWidgetManagerCompatV16 extends AppWidgetManagerCompat {
         }
         return result;
     }
-    @Override
-    public void setBindAppWidgetPermission(){
 
-        mAppWidgetManager.setBindAppWidgetPermission("com.android.launcher3",
-                            true);
+    @Override
+    public void setBindAppWidgetPermission() {
+
+//        mAppWidgetManager.setBindAppWidgetPermission("com.android.launcher3",
+//                            true);
     }
 }
