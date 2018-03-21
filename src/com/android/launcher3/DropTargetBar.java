@@ -57,7 +57,7 @@ public class DropTargetBar extends LinearLayout implements DragController.DragLi
     private ViewPropertyAnimator mCurrentAnimation;
 
     // Drop targets
-//    private ButtonDropTarget mDeleteDropTarget;
+    private ButtonDropTarget mDeleteDropTarget;
     private ButtonDropTarget mAppInfoDropTarget;
     private ButtonDropTarget mUninstallDropTarget;
 
@@ -74,11 +74,11 @@ public class DropTargetBar extends LinearLayout implements DragController.DragLi
         super.onFinishInflate();
 
         // Get the individual components
-//        mDeleteDropTarget = (ButtonDropTarget) findViewById(R.id.delete_target_text);
+        mDeleteDropTarget = (ButtonDropTarget) findViewById(R.id.delete_target_text);
         mAppInfoDropTarget = (ButtonDropTarget) findViewById(R.id.info_target_text);
         mUninstallDropTarget = (ButtonDropTarget) findViewById(R.id.uninstall_target_text);
 
-//        mDeleteDropTarget.setDropTargetBar(this);
+        mDeleteDropTarget.setDropTargetBar(this);
         mAppInfoDropTarget.setDropTargetBar(this);
         mUninstallDropTarget.setDropTargetBar(this);
 
@@ -88,13 +88,13 @@ public class DropTargetBar extends LinearLayout implements DragController.DragLi
 
     public void setup(DragController dragController) {
         dragController.addDragListener(this);
-//        dragController.setFlingToDeleteDropTarget(mDeleteDropTarget);
+        dragController.setFlingToDeleteDropTarget(mDeleteDropTarget);
 
-//        dragController.addDragListener(mDeleteDropTarget);
+        dragController.addDragListener(mDeleteDropTarget);
         dragController.addDragListener(mAppInfoDropTarget);
         dragController.addDragListener(mUninstallDropTarget);
 
-//        dragController.addDropTarget(mDeleteDropTarget);
+        dragController.addDropTarget(mDeleteDropTarget);
         dragController.addDropTarget(mAppInfoDropTarget);
         dragController.addDropTarget(mUninstallDropTarget);
     }
