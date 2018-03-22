@@ -18,8 +18,7 @@
 
     <com.android.launcher3.CellLayout
         android:id="@+id/layout"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_gravity="center"
-        android:background="@color/host_seat_bg_color" />
+        android:layout_gravity="center" />
 </com.android.launcher3.Hotseat>

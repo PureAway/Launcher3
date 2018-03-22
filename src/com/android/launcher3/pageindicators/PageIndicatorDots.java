@@ -124,7 +124,7 @@ public class PageIndicatorDots extends PageIndicator {
         setOutlineProvider(new MyOutlineProver());
 
         mActiveColor = getResources().getColor(R.color.page_indicator_dot_color);
-        mInActiveColor = getResources().getColor(R.color.host_seat_bg_color);
+        mInActiveColor = getResources().getColor(R.color.hot_seat_bg_color);
 
         mIsRtl = Utilities.isRtl(getResources());
     }
