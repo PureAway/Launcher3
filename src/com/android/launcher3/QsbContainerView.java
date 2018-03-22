@@ -100,7 +100,7 @@ public class QsbContainerView extends FrameLayout {
                 sSavedWidgetId = savedInstanceState.getInt(QSB_WIDGET_ID, -1);
             }
             mWrapper = new FrameLayout(getActivity());
-            mWrapper.addView(createQsb(inflater, mWrapper));
+//            mWrapper.addView(createQsb(inflater, mWrapper));
             return mWrapper;
         }
 
@@ -153,14 +153,14 @@ public class QsbContainerView extends FrameLayout {
 
                 if (!Utilities.containsAll(AppWidgetManager.getInstance(launcher)
                         .getAppWidgetOptions(widgetId), opts)) {
-                try{
-                    mQsb.updateAppWidgetOptions(opts);
-                }catch(Exception e){
-                   Log.v("QsbContainerView", "getQsbBar error "+e.getMessage());
-                   return null; 
+                    try {
+                        mQsb.updateAppWidgetOptions(opts);
+                    } catch (Exception e) {
+                        Log.v("QsbContainerView", "getQsbBar error " + e.getMessage());
+                        return null;
+                    }
                 }
-                }
-                    mQsb.setPadding(0, 0, 0, 0);
+                mQsb.setPadding(0, 0, 0, 0);
                 return mQsb;
             }
 
@@ -224,7 +224,7 @@ public class QsbContainerView extends FrameLayout {
         private void rebindFragment() {
             if (mWrapper != null && getActivity() != null) {
                 mWrapper.removeAllViews();
-                mWrapper.addView(createQsb(getActivity().getLayoutInflater(), mWrapper));
+                //mWrapper.addView(createQsb(getActivity().getLayoutInflater(), mWrapper));
             }
         }
 

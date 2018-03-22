@@ -7,13 +7,10 @@ import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.v4.graphics.ColorUtils;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.util.Property;
 import android.view.ViewConfiguration;
 import android.widget.ImageView;
@@ -25,7 +22,7 @@ import com.android.launcher3.dynamicui.ExtractedColors;
 
 /**
  * A PageIndicator that briefly shows a fraction of a line when moving between pages.
- *
+ * <p>
  * The fraction is 1 / number of pages and the position is based on the progress of the page scroll.
  */
 public class PageIndicatorLineCaret extends PageIndicator {
@@ -70,8 +67,8 @@ public class PageIndicatorLineCaret extends PageIndicator {
 
         @Override
         public void set(PageIndicatorLineCaret obj, Integer alpha) {
-            obj.mLinePaint.setAlpha(alpha);
-            obj.invalidate();
+            //obj.mLinePaint.setAlpha(alpha);
+            //obj.invalidate();
         }
     };
 
@@ -123,7 +120,7 @@ public class PageIndicatorLineCaret extends PageIndicator {
 
         Resources res = context.getResources();
         mLinePaint = new Paint();
-        mLinePaint.setAlpha(0);
+        mLinePaint.setAlpha(50);
 
         mLauncher = Launcher.getLauncher(context);
         mLineHeight = res.getDimensionPixelSize(R.dimen.dynamic_grid_page_indicator_line_height);
@@ -149,7 +146,8 @@ public class PageIndicatorLineCaret extends PageIndicator {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        if (mTotalScroll == 0 || mNumPagesFloat == 0) {
+        //在这边可以改变样式
+        if (mNumPagesFloat == 0) {
             return;
         }
 
@@ -190,8 +188,8 @@ public class PageIndicatorLineCaret extends PageIndicator {
     }
 
     private void hideAfterDelay() {
-        mDelayedLineFadeHandler.removeCallbacksAndMessages(null);
-        mDelayedLineFadeHandler.postDelayed(mHideLineRunnable, LINE_FADE_DELAY);
+        /*mDelayedLineFadeHandler.removeCallbacksAndMessages(null);
+        mDelayedLineFadeHandler.postDelayed(mHideLineRunnable, LINE_FADE_DELAY);*/
     }
 
     @Override
@@ -220,31 +218,31 @@ public class PageIndicatorLineCaret extends PageIndicator {
      * - mostly opaque black if the hotseat is black (ignoring alpha)
      */
     public void updateColor(ExtractedColors extractedColors) {
-        int originalLineAlpha = mLinePaint.getAlpha();
-        int color = extractedColors.getColor(ExtractedColors.HOTSEAT_INDEX, Color.TRANSPARENT);
-        if (color != Color.TRANSPARENT) {
-            color = ColorUtils.setAlphaComponent(color, 255);
-            if (color == Color.BLACK) {
-                mActiveAlpha = BLACK_ALPHA;
-            } else if (color == Color.WHITE) {
-                mActiveAlpha = WHITE_ALPHA;
-            } else {
-                Log.e(TAG, "Setting workspace page indicators to an unsupported color: #"
-                        + Integer.toHexString(color));
-            }
-            mLinePaint.setColor(color);
-            mLinePaint.setAlpha(originalLineAlpha);
-        }
+//        int originalLineAlpha = mLinePaint.getAlpha();
+//        int color = extractedColors.getColor(ExtractedColors.HOTSEAT_INDEX, Color.TRANSPARENT);
+//        if (color != Color.TRANSPARENT) {
+//            color = ColorUtils.setAlphaComponent(color, 255);
+//            if (color == Color.BLACK) {
+//                mActiveAlpha = BLACK_ALPHA;
+//            } else if (color == Color.WHITE) {
+//                mActiveAlpha = WHITE_ALPHA;
+//            } else {
+//                Log.e(TAG, "Setting workspace page indicators to an unsupported color: #"
+//                        + Integer.toHexString(color));
+//            }
+//            mLinePaint.setColor(color);
+        // mLinePaint.setAlpha(originalLineAlpha);
+//        }
     }
 
     private void animateLineToAlpha(int alpha) {
-        if (alpha == mToAlpha) {
-            // Ignore the new animation if it is going to the same alpha as the current animation.
-            return;
-        }
-        mToAlpha = alpha;
-        setupAndRunAnimation(ObjectAnimator.ofInt(this, PAINT_ALPHA, alpha),
-                LINE_ALPHA_ANIMATOR_INDEX);
+//        if (alpha == mToAlpha) {
+//            // Ignore the new animation if it is going to the same alpha as the current animation.
+//            return;
+//        }
+//        mToAlpha = alpha;
+//        setupAndRunAnimation(ObjectAnimator.ofInt(this, PAINT_ALPHA, alpha),
+//                LINE_ALPHA_ANIMATOR_INDEX);
     }
 
     private void animateToNumPages(int numPages) {
@@ -260,7 +258,7 @@ public class PageIndicatorLineCaret extends PageIndicator {
     /**
      * Starts the given animator and stores it in the provided index in {@link #mAnimators} until
      * the animation ends.
-     *
+     * <p>
      * If an animator is already at the index (i.e. it is already playing), it is canceled and
      * replaced with the new animator.
      */
