@@ -487,12 +487,12 @@ public class DeviceProfile {
                 workspacePadding.bottom);
         workspace.setPageSpacing(getWorkspacePageSpacing());
 
-        View qsbContainer = launcher.getQsbContainer();
-        lp = (FrameLayout.LayoutParams) qsbContainer.getLayoutParams();
-        lp.topMargin = mInsets.top + workspacePadding.top;
-        lp.width = LayoutParams.MATCH_PARENT;
-        lp.height = LayoutParams.MATCH_PARENT;
-        qsbContainer.setLayoutParams(lp);
+//        View qsbContainer = launcher.getQsbContainer();
+//        lp = (FrameLayout.LayoutParams) qsbContainer.getLayoutParams();
+//        lp.topMargin = mInsets.top + workspacePadding.top;
+//        lp.width = LayoutParams.MATCH_PARENT;
+//        lp.height = LayoutParams.MATCH_PARENT;
+//        qsbContainer.setLayoutParams(lp);
 
         // Layout the hotseat
         Hotseat hotseat = (Hotseat) launcher.findViewById(R.id.hotseat);
@@ -536,8 +536,8 @@ public class DeviceProfile {
         View pageIndicator = launcher.findViewById(R.id.page_indicator);
         if (pageIndicator != null) {
             lp = (FrameLayout.LayoutParams) pageIndicator.getLayoutParams();
+            boolean isLandScape = mContext.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
             if (isVerticalBarLayout()) {
-                boolean isLandScape = mContext.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
                 if (mInsets.left > 0) {
                     lp.leftMargin = mInsets.left + pageIndicatorLandGutterLeftNavBarPx -
                             lp.width - pageIndicatorLandWorkspaceOffsetPx;
