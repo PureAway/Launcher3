@@ -95,11 +95,11 @@ public class PageIndicatorDots extends PageIndicator {
     /**
      * The current position of the active dot including the animation progress.
      * For ex:
-     *   0.0  => Active dot is at position 0
-     *   0.33 => Active dot is at position 0 and is moving towards 1
-     *   0.50 => Active dot is at position [0, 1]
-     *   0.77 => Active dot has left position 0 and is collapsing towards position 1
-     *   1.0  => Active dot is at position 1
+     * 0.0  => Active dot is at position 0
+     * 0.33 => Active dot is at position 0 and is moving towards 1
+     * 0.50 => Active dot is at position [0, 1]
+     * 0.77 => Active dot has left position 0 and is collapsing towards position 1
+     * 1.0  => Active dot is at position 1
      */
     private float mCurrentPosition;
     private float mFinalPosition;
@@ -123,8 +123,8 @@ public class PageIndicatorDots extends PageIndicator {
         mDotRadius = getResources().getDimension(R.dimen.page_indicator_dot_size) / 2;
         setOutlineProvider(new MyOutlineProver());
 
-        mActiveColor = Utilities.getColorAccent(context);
-        mInActiveColor = getResources().getColor(R.color.page_indicator_dot_color);
+        mActiveColor = getResources().getColor(R.color.page_indicator_dot_color);
+        mInActiveColor = getResources().getColor(R.color.host_seat_bg_color);
 
         mIsRtl = Utilities.isRtl(getResources());
     }
@@ -186,7 +186,7 @@ public class PageIndicatorDots extends PageIndicator {
     }
 
     public void playEntryAnimation() {
-        int count  = mEntryAnimationRadiusFactors.length;
+        int count = mEntryAnimationRadiusFactors.length;
         if (count == 0) {
             mEntryAnimationRadiusFactors = null;
             invalidate();
@@ -239,7 +239,7 @@ public class PageIndicatorDots extends PageIndicator {
         // Add extra spacing of mDotRadius on all sides so than entry animation could be run.
         int width = MeasureSpec.getMode(widthMeasureSpec) == MeasureSpec.EXACTLY ?
                 MeasureSpec.getSize(widthMeasureSpec) : (int) ((mNumPages * 3 + 2) * mDotRadius);
-        int height= MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.EXACTLY ?
+        int height = MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.EXACTLY ?
                 MeasureSpec.getSize(heightMeasureSpec) : (int) (4 * mDotRadius);
         setMeasuredDimension(width, height);
     }
@@ -272,7 +272,9 @@ public class PageIndicatorDots extends PageIndicator {
             }
 
             mCirclePaint.setColor(mActiveColor);
-            canvas.drawRoundRect(getActiveRect(), mDotRadius, mDotRadius, mCirclePaint);
+            RectF rectF = getActiveRect();
+            float dotRadius = (rectF.bottom - rectF.top) / 2;
+            canvas.drawRoundRect(rectF, dotRadius, dotRadius, mCirclePaint);
         }
     }
 
@@ -304,6 +306,10 @@ public class PageIndicatorDots extends PageIndicator {
             sTempRect.right = getWidth() - sTempRect.left;
             sTempRect.left = sTempRect.right - rectWidth;
         }
+        sTempRect.top = sTempRect.top - 2;
+        sTempRect.bottom = sTempRect.bottom + 2;
+        sTempRect.left = sTempRect.left - 2;
+        sTempRect.right = sTempRect.right + 2;
         return sTempRect;
     }
 

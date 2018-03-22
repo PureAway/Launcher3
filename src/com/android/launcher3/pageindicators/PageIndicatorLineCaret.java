@@ -13,7 +13,6 @@ import android.os.Looper;
 import android.util.AttributeSet;
 import android.util.Property;
 import android.view.ViewConfiguration;
-import android.widget.ImageView;
 
 import com.android.launcher3.Launcher;
 import com.android.launcher3.R;
@@ -56,7 +55,7 @@ public class PageIndicatorLineCaret extends PageIndicator {
     private Paint mLinePaint;
     private Launcher mLauncher;
     private final int mLineHeight;
-    private ImageView mAllAppsHandle;
+//    private ImageView mAllAppsHandle;
 
     private static final Property<PageIndicatorLineCaret, Integer> PAINT_ALPHA
             = new Property<PageIndicatorLineCaret, Integer>(Integer.class, "paint_alpha") {
@@ -130,18 +129,18 @@ public class PageIndicatorLineCaret extends PageIndicator {
     @Override
     protected void onFinishInflate() {
         super.onFinishInflate();
-        mAllAppsHandle = (ImageView) findViewById(R.id.all_apps_handle);
-        mAllAppsHandle.setImageDrawable(getCaretDrawable());
-        mAllAppsHandle.setOnTouchListener(mLauncher.getHapticFeedbackTouchListener());
-        mAllAppsHandle.setOnClickListener(mLauncher);
-        mAllAppsHandle.setOnLongClickListener(mLauncher);
-        mAllAppsHandle.setOnFocusChangeListener(mLauncher.mFocusHandler);
-        mLauncher.setAllAppsButton(mAllAppsHandle);
+//        mAllAppsHandle = (ImageView) findViewById(R.id.all_apps_handle);
+//        mAllAppsHandle.setImageDrawable(getCaretDrawable());
+//        mAllAppsHandle.setOnTouchListener(mLauncher.getHapticFeedbackTouchListener());
+//        mAllAppsHandle.setOnClickListener(mLauncher);
+//        mAllAppsHandle.setOnLongClickListener(mLauncher);
+//        mAllAppsHandle.setOnFocusChangeListener(mLauncher.mFocusHandler);
+//        mLauncher.setAllAppsButton(mAllAppsHandle);
     }
 
     @Override
     public void setAccessibilityDelegate(AccessibilityDelegate delegate) {
-        mAllAppsHandle.setAccessibilityDelegate(delegate);
+//        mAllAppsHandle.setAccessibilityDelegate(delegate);
     }
 
     @Override
@@ -163,7 +162,7 @@ public class PageIndicatorLineCaret extends PageIndicator {
 
     @Override
     public void setContentDescription(CharSequence contentDescription) {
-        mAllAppsHandle.setContentDescription(contentDescription);
+//        mAllAppsHandle.setContentDescription(contentDescription);
     }
 
     @Override

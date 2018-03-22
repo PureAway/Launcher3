@@ -57,12 +57,6 @@
             layout="@layout/overview_panel"
             android:visibility="gone" />
 
-        <!--  <com.android.launcher3.pageindicators.PageIndicatorCaretLandscape
-              android:id="@+id/page_indicator"
-              android:layout_width="@dimen/dynamic_grid_page_indicator_height"
-              android:layout_height="@dimen/dynamic_grid_page_indicator_height"
-              android:layout_gravity="center|bottom"
-              android:layout_marginBottom="30dp"/>-->
         <include
             android:id="@+id/page_indicator"
             layout="@layout/page_indicator" />

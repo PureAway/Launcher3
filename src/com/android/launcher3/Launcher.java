@@ -973,6 +973,8 @@ public class Launcher extends Activity
         if (Utilities.isNycMR1OrAbove()) {
             mAppWidgetHost.startListening();
         }
+
+        mWorkspace.setCurrentPage(currentPage);
     }
 
     @Override
@@ -1089,6 +1091,8 @@ public class Launcher extends Activity
         }
     }
 
+    int currentPage = 0;
+
     @Override
     protected void onPause() {
         // Ensure that items added to Launcher are queued until Launcher returns
@@ -1096,6 +1100,7 @@ public class Launcher extends Activity
 
         super.onPause();
         mPaused = true;
+        currentPage = mWorkspace.getCurrentPage();
         mDragController.cancelDrag();
         mDragController.resetLastGestureUpTime();
 
