@@ -41,14 +41,14 @@ import java.util.Comparator;
 public class InvariantDeviceProfile {
 
     // This is a static that we use for the default icon size on a 4/5-inch phone
-    private static float DEFAULT_ICON_SIZE_DP = 60;
+    private static float DEFAULT_ICON_SIZE_DP = 54;
 
-    private static final float ICON_SIZE_DEFINED_IN_APP_DP = 48;
+    private static final float ICON_SIZE_DEFINED_IN_APP_DP = 60;
 
     // Constants that affects the interpolation curve between statically defined device profile
     // buckets.
     private static float KNEARESTNEIGHBOR = 3;
-    private static float WEIGHT_POWER = 5;
+    private static float WEIGHT_POWER = 4;
 
     // used to offset float not being able to express extremely small weights in extreme cases.
     private static float WEIGHT_EFFICIENT = 100000f;
@@ -140,7 +140,7 @@ public class InvariantDeviceProfile {
                 invDistWeightedInterpolate(minWidthDps, minHeightDps, closestProfiles);
 
         InvariantDeviceProfile closestProfile = closestProfiles.get(0);
-        numRows = closestProfile.numRows;
+        numRows = 4;
         numColumns = 11;      //主屏数目
         numHotseatIcons = 11; //底座数目
         defaultLayoutId = closestProfile.defaultLayoutId;
