@@ -59,12 +59,12 @@ public class DeleteDropTarget extends ButtonDropTarget {
      * @return true for items that should have a "Remove" action in accessibility.
      */
     public static boolean supportsAccessibleDrop(ItemInfo info) {
-        return info.itemType == 1;
+        return info.itemType == 1 || info.itemType == 4;
     }
 
     @Override
     protected boolean supportsDrop(DragSource source, ItemInfo info) {
-        return info.itemType == 1;
+        return info.itemType == 1 || info.itemType == 4;
     }
 
     /**

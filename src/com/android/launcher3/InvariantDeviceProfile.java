@@ -151,7 +151,7 @@ public class InvariantDeviceProfile {
         iconSize = interpolatedDeviceProfileOut.iconSize;
         iconBitmapSize = Utilities.pxFromDp(iconSize, dm);
         iconTextSize = interpolatedDeviceProfileOut.iconTextSize;
-        hotseatIconSize = interpolatedDeviceProfileOut.hotseatIconSize;
+        hotseatIconSize = iconSize; // modify
         fillResIconDpi = getLauncherIconDensity(iconBitmapSize);
 
         // If the partner customization apk contains any grid overrides, apply them

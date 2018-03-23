@@ -70,7 +70,7 @@ public class Hotseat extends FrameLayout
         mLauncher = Launcher.getLauncher(context);
         mHasVerticalHotseat = mLauncher.getDeviceProfile().isVerticalBarLayout();
         mBackgroundColor = ColorUtils.setAlphaComponent(
-                ContextCompat.getColor(context, R.color.hot_seat_bg_color), 0);
+                ContextCompat.getColor(context, R.color.hot_seat_bg_color), 50);
         mBackground = new ColorDrawable(mBackgroundColor);
         setBackground(mBackground);
     }
@@ -112,7 +112,7 @@ public class Hotseat extends FrameLayout
     protected void onFinishInflate() {
         super.onFinishInflate();
         DeviceProfile grid = mLauncher.getDeviceProfile();
-        mContent = (CellLayout) findViewById(R.id.layout);
+        mContent = findViewById(R.id.layout);
         //modify
 //        if (grid.isLandscape && !grid.isLargeTablet) {
 //            mContent.setGridSize(1, (int) grid.inv.numHotseatIcons);

@@ -82,7 +82,9 @@ class AppWidgetManagerCompatVL extends AppWidgetManagerCompat {
 
     @Override
     public boolean bindAppWidgetIdSkipBindPermission(int appWidgetId, AppWidgetProviderInfo info, Bundle options) {
-        return true;
+        return mAppWidgetManager.bindAppWidgetIdIfAllowed(
+                appWidgetId, info.getProfile(), info.provider, options);
+//        return mAppWidgetManager.bindAppWidgetIdSkipBindPermission(appWidgetId,info.provider,options,true);
     }
 
     @Override
@@ -177,11 +179,10 @@ class AppWidgetManagerCompatVL extends AppWidgetManagerCompat {
         }
         return result;
     }
-
     @Override
     public void setBindAppWidgetPermission() {
 
 //        mAppWidgetManager.setBindAppWidgetPermission("com.android.launcher3",
-//                            true);
+//                true);
     }
 }

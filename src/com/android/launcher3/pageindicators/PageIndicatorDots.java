@@ -120,6 +120,7 @@ public class PageIndicatorDots extends PageIndicator {
 
         mCirclePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mCirclePaint.setStyle(Style.FILL);
+        mCirclePaint.setAntiAlias(true);
         mDotRadius = getResources().getDimension(R.dimen.page_indicator_dot_size) / 2;
         setOutlineProvider(new MyOutlineProver());
 
@@ -306,10 +307,10 @@ public class PageIndicatorDots extends PageIndicator {
             sTempRect.right = getWidth() - sTempRect.left;
             sTempRect.left = sTempRect.right - rectWidth;
         }
-        sTempRect.top = sTempRect.top - 2;
-        sTempRect.bottom = sTempRect.bottom + 2;
-        sTempRect.left = sTempRect.left - 2;
-        sTempRect.right = sTempRect.right + 2;
+        sTempRect.top = sTempRect.top - 1;
+        sTempRect.bottom = sTempRect.bottom + 1;
+        sTempRect.left = sTempRect.left - 1;
+        sTempRect.right = sTempRect.right + 1;
         return sTempRect;
     }
 
