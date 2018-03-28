@@ -433,11 +433,6 @@ public class LauncherModel extends BroadcastReceiver
         InvariantDeviceProfile profile = app.getInvariantDeviceProfile();
 
         GridOccupancy occupied = new GridOccupancy(profile.numColumns, profile.numRows);
-        for (int i = 0; i < profile.numColumns; i++) {
-            for (int j = 0; j < 2; j++) {
-                occupied.markCells(i, j, spanX, spanY, true);
-            }
-        }
         if (occupiedPos != null) {
             for (ItemInfo r : occupiedPos) {
                 occupied.markCells(r, true);

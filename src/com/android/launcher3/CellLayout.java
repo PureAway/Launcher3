@@ -1256,15 +1256,20 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
         int startY;
         int countY;
 
-        if (itemType == LauncherSettings.Favorites.ITEM_TYPE_APPWIDGET
-                || itemType == LauncherSettings.Favorites.ITEM_TYPE_CUSTOM_APPWIDGET
-                || itemType == Favorites.ITEM_TYPE_SHORTCUT) {
-            //小控件
+        if (isHotseat()) {
             startY = 0;
-            countY = mCountY - 2;
-        } else {
-            startY = mCountY - 2;
             countY = mCountY;
+        } else {
+            if (itemType == LauncherSettings.Favorites.ITEM_TYPE_APPWIDGET
+                    || itemType == LauncherSettings.Favorites.ITEM_TYPE_CUSTOM_APPWIDGET
+                    || itemType == Favorites.ITEM_TYPE_SHORTCUT) {
+                //小控件
+                startY = 0;
+                countY = mCountY - 2;
+            } else {
+                startY = mCountY - 2;
+                countY = mCountY;
+            }
         }
 
         if (minSpanX <= 0 || minSpanY <= 0 || spanX <= 0 || spanY <= 0 ||
@@ -1387,16 +1392,33 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
      * nearest the requested location.
      */
     private int[] findNearestArea(int cellX, int cellY, int spanX, int spanY, int[] direction,
-                                  boolean[][] occupied, boolean blockOccupied[][], int[] result) {
+                                  boolean[][] occupied, boolean blockOccupied[][], int[] result, int itemType) {
         // Keep track of best-scoring drop area
         final int[] bestXY = result != null ? result : new int[2];
         float bestDistance = Float.MAX_VALUE;
         int bestDirectionScore = Integer.MIN_VALUE;
 
         final int countX = mCountX;
-        final int countY = mCountY;
+        int startY;
+        int endY;
 
-        for (int y = 0; y < countY - (spanY - 1); y++) {
+        if (isHotseat()) {
+            startY = 0;
+            endY = mCountY;
+        } else {
+            if (itemType == LauncherSettings.Favorites.ITEM_TYPE_APPWIDGET
+                    || itemType == LauncherSettings.Favorites.ITEM_TYPE_CUSTOM_APPWIDGET
+                    || itemType == Favorites.ITEM_TYPE_SHORTCUT) {
+                //小控件
+                startY = 0;
+                endY = mCountY - 2;
+            } else {
+                startY = mCountY - 2;
+                endY = mCountY;
+            }
+        }
+
+        for (int y = startY; y < endY - (spanY - 1); y++) {
             inner:
             for (int x = 0; x < countX - (spanX - 1); x++) {
                 // First, let's see if this thing fits anywhere
@@ -1435,14 +1457,14 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
     }
 
     private boolean addViewToTempLocation(View v, Rect rectOccupiedByPotentialDrop,
-                                          int[] direction, ItemConfiguration currentState) {
+                                          int[] direction, ItemConfiguration currentState, int itemType) {
         CellAndSpan c = currentState.map.get(v);
         boolean success = false;
         mTmpOccupied.markCells(c, false);
         mTmpOccupied.markCells(rectOccupiedByPotentialDrop, true);
 
         findNearestArea(c.cellX, c.cellY, c.spanX, c.spanY, direction,
-                mTmpOccupied.cells, null, mTempLocation);
+                mTmpOccupied.cells, null, mTempLocation, itemType);
 
         if (mTempLocation[0] >= 0 && mTempLocation[1] >= 0) {
             c.cellX = mTempLocation[0];
@@ -1641,7 +1663,7 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
     }
 
     private boolean pushViewsToTempLocation(ArrayList<View> views, Rect rectOccupiedByPotentialDrop,
-                                            int[] direction, View dragView, ItemConfiguration currentState) {
+                                            int[] direction, View dragView, ItemConfiguration currentState, int itemType) {
 
         ViewCluster cluster = new ViewCluster(views, currentState);
         Rect clusterRect = cluster.getBoundingRect();
@@ -1717,10 +1739,23 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
         boolean foundSolution = false;
         clusterRect = cluster.getBoundingRect();
 
+        int startY;
+        int endY;
+        if (itemType == LauncherSettings.Favorites.ITEM_TYPE_APPWIDGET
+                || itemType == LauncherSettings.Favorites.ITEM_TYPE_CUSTOM_APPWIDGET
+                || itemType == Favorites.ITEM_TYPE_SHORTCUT) {
+            //小控件
+            startY = 0;
+            endY = mCountY - 2;
+        } else {
+            startY = mCountY - 2;
+            endY = mCountY;
+        }
+
         // Due to the nature of the algorithm, the only check required to verify a valid solution
         // is to ensure that completed shifted cluster lies completely within the cell layout.
-        if (!fail && clusterRect.left >= 0 && clusterRect.right <= mCountX && clusterRect.top >= 0 &&
-                clusterRect.bottom <= mCountY) {
+        if (!fail && clusterRect.left >= 0 && clusterRect.right <= mCountX && clusterRect.top >= startY &&
+                clusterRect.bottom <= endY) {
             foundSolution = true;
         } else {
             currentState.restore();
@@ -1736,7 +1771,7 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
     }
 
     private boolean addViewsToTempLocation(ArrayList<View> views, Rect rectOccupiedByPotentialDrop,
-                                           int[] direction, View dragView, ItemConfiguration currentState) {
+                                           int[] direction, View dragView, ItemConfiguration currentState, int itemType) {
         if (views.size() == 0) return true;
 
         boolean success = false;
@@ -1764,7 +1799,7 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
 
         findNearestArea(boundingRect.left, boundingRect.top, boundingRect.width(),
                 boundingRect.height(), direction,
-                mTmpOccupied.cells, blockOccupied.cells, mTempLocation);
+                mTmpOccupied.cells, blockOccupied.cells, mTempLocation, itemType);
 
         // If we successfuly found a location by pushing the block of views, we commit it
         if (mTempLocation[0] >= 0 && mTempLocation[1] >= 0) {
@@ -1790,7 +1825,7 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
     // to push items in each of the cardinal directions, in an order based on the direction vector
     // passed.
     private boolean attemptPushInDirection(ArrayList<View> intersectingViews, Rect occupied,
-                                           int[] direction, View ignoreView, ItemConfiguration solution) {
+                                           int[] direction, View ignoreView, ItemConfiguration solution, int itemType) {
         if ((Math.abs(direction[0]) + Math.abs(direction[1])) > 1) {
             // If the direction vector has two non-zero components, we try pushing
             // separately in each of the components.
@@ -1798,7 +1833,7 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
             direction[1] = 0;
 
             if (pushViewsToTempLocation(intersectingViews, occupied, direction,
-                    ignoreView, solution)) {
+                    ignoreView, solution, itemType)) {
                 return true;
             }
             direction[1] = temp;
@@ -1806,7 +1841,7 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
             direction[0] = 0;
 
             if (pushViewsToTempLocation(intersectingViews, occupied, direction,
-                    ignoreView, solution)) {
+                    ignoreView, solution, itemType)) {
                 return true;
             }
             // Revert the direction
@@ -1818,7 +1853,7 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
             temp = direction[1];
             direction[1] = 0;
             if (pushViewsToTempLocation(intersectingViews, occupied, direction,
-                    ignoreView, solution)) {
+                    ignoreView, solution, itemType)) {
                 return true;
             }
 
@@ -1826,7 +1861,7 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
             temp = direction[0];
             direction[0] = 0;
             if (pushViewsToTempLocation(intersectingViews, occupied, direction,
-                    ignoreView, solution)) {
+                    ignoreView, solution, itemType)) {
                 return true;
             }
             // revert the direction
@@ -1838,14 +1873,14 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
             // If the direction vector has a single non-zero component, we push first in the
             // direction of the vector
             if (pushViewsToTempLocation(intersectingViews, occupied, direction,
-                    ignoreView, solution)) {
+                    ignoreView, solution, itemType)) {
                 return true;
             }
             // Then we try the opposite direction
             direction[0] *= -1;
             direction[1] *= -1;
             if (pushViewsToTempLocation(intersectingViews, occupied, direction,
-                    ignoreView, solution)) {
+                    ignoreView, solution, itemType)) {
                 return true;
             }
             // Switch the direction back
@@ -1860,7 +1895,7 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
             direction[1] = direction[0];
             direction[0] = temp;
             if (pushViewsToTempLocation(intersectingViews, occupied, direction,
-                    ignoreView, solution)) {
+                    ignoreView, solution, itemType)) {
                 return true;
             }
 
@@ -1868,7 +1903,7 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
             direction[0] *= -1;
             direction[1] *= -1;
             if (pushViewsToTempLocation(intersectingViews, occupied, direction,
-                    ignoreView, solution)) {
+                    ignoreView, solution, itemType)) {
                 return true;
             }
             // Switch the direction back
@@ -1884,7 +1919,7 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
     }
 
     private boolean rearrangementExists(int cellX, int cellY, int spanX, int spanY, int[] direction,
-                                        View ignoreView, ItemConfiguration solution) {
+                                        View ignoreView, ItemConfiguration solution, int itemType) {
         // Return early if get invalid cell positions
         if (cellX < 0 || cellY < 0) return false;
 
@@ -1920,19 +1955,19 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
         // we try to find a solution such that no displaced item travels through another item
         // without also displacing that item.
         if (attemptPushInDirection(mIntersectingViews, mOccupiedRect, direction, ignoreView,
-                solution)) {
+                solution, itemType)) {
             return true;
         }
 
         // Next we try moving the views as a block, but without requiring the push mechanic.
         if (addViewsToTempLocation(mIntersectingViews, mOccupiedRect, direction, ignoreView,
-                solution)) {
+                solution, itemType)) {
             return true;
         }
 
         // Ok, they couldn't move as a block, let's move them individually
         for (View v : mIntersectingViews) {
-            if (!addViewToTempLocation(v, mOccupiedRect, direction, solution)) {
+            if (!addViewToTempLocation(v, mOccupiedRect, direction, solution, itemType)) {
                 return false;
             }
         }
@@ -1974,7 +2009,7 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
         // First we try the exact nearest position of the item being dragged,
         // we will then want to try to move this around to other neighbouring positions
         success = rearrangementExists(result[0], result[1], spanX, spanY, direction, dragView,
-                solution);
+                solution, itemType);
 
         if (!success) {
             // We try shrinking the widget down to size in an alternating pattern, shrink 1 in
