@@ -71,8 +71,8 @@ final class FullMergeAlgorithm implements AlphabeticalAppsList.MergeAlgorithm {
 
     @Override
     public boolean continueMerging(AlphabeticalAppsList.SectionInfo section,
-            AlphabeticalAppsList.SectionInfo withSection,
-            int sectionAppCount, int numAppsPerRow, int mergeCount) {
+                                   AlphabeticalAppsList.SectionInfo withSection,
+                                   int sectionAppCount, int numAppsPerRow, int mergeCount) {
         // Don't merge the predicted apps
         if (section.firstAppItem.viewType != AllAppsGridAdapter.VIEW_TYPE_ICON) {
             return false;
@@ -103,8 +103,8 @@ final class SimpleSectionMergeAlgorithm implements AlphabeticalAppsList.MergeAlg
 
     @Override
     public boolean continueMerging(AlphabeticalAppsList.SectionInfo section,
-            AlphabeticalAppsList.SectionInfo withSection,
-            int sectionAppCount, int numAppsPerRow, int mergeCount) {
+                                   AlphabeticalAppsList.SectionInfo withSection,
+                                   int sectionAppCount, int numAppsPerRow, int mergeCount) {
         // Don't merge the predicted apps
         if (section.firstAppItem.viewType != AllAppsGridAdapter.VIEW_TYPE_ICON) {
             return false;
@@ -288,10 +288,7 @@ public class AllAppsContainerView extends BaseContainerView implements DragSourc
 
         // IF scroller is at the very top OR there is no scroll bar because there is probably not
         // enough items to scroll, THEN it's okay for the container to be pulled down.
-        if (mAppsRecyclerView.getScrollBar().getThumbOffset().y <= 0) {
-            return true;
-        }
-        return false;
+        return mAppsRecyclerView.getScrollBar().getThumbOffset().y <= 0;
     }
 
     /**
@@ -373,7 +370,8 @@ public class AllAppsContainerView extends BaseContainerView implements DragSourc
     }
 
     @Override
-    public void onBoundsChanged(Rect newBounds) { }
+    public void onBoundsChanged(Rect newBounds) {
+    }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
@@ -605,7 +603,7 @@ public class AllAppsContainerView extends BaseContainerView implements DragSourc
 
     @Override
     public void onDropCompleted(View target, DropTarget.DragObject d, boolean isFlingToDelete,
-            boolean success) {
+                                boolean success) {
         if (isFlingToDelete || !success || (target != mLauncher.getWorkspace() &&
                 !(target instanceof DeleteDropTarget) && !(target instanceof Folder))) {
             // Exit spring loaded mode if we have not successfully dropped or have not handled the
@@ -626,7 +624,7 @@ public class AllAppsContainerView extends BaseContainerView implements DragSourc
                 ItemInfo itemInfo = d.dragInfo;
                 if (layout != null) {
                     showOutOfSpaceMessage =
-                            !layout.findCellForSpan(null, itemInfo.spanX, itemInfo.spanY);
+                            !layout.findCellForSpan(null, itemInfo.spanX, itemInfo.spanY, d.dragInfo.itemType);
                 }
             }
             if (showOutOfSpaceMessage) {
@@ -639,7 +637,7 @@ public class AllAppsContainerView extends BaseContainerView implements DragSourc
 
     @Override
     public void onLauncherTransitionPrepare(Launcher l, boolean animated,
-            boolean multiplePagesVisible) {
+                                            boolean multiplePagesVisible) {
         // Do nothing
     }
 

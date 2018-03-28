@@ -420,8 +420,18 @@ public class Workspace extends PagedView
         return r;
     }
 
+
+    private int itemType = -1;
+
+    public int getItemType() {
+        return itemType;
+    }
+
     @Override
     public void onDragStart(DropTarget.DragObject dragObject, DragOptions options) {
+
+        itemType = dragObject.dragInfo.itemType;
+
         if (ENFORCE_DRAG_EVENT_ORDER) {
             enfoceDragParity("onDragStart", 0, 0);
         }
@@ -2432,7 +2442,7 @@ public class Workspace extends PagedView
 
             mTargetCell = findNearestArea((int) mDragViewVisualCenter[0],
                     (int) mDragViewVisualCenter[1], minSpanX, minSpanY, dropTargetLayout,
-                    mTargetCell);
+                    mTargetCell, d.dragInfo.itemType);
             float distance = dropTargetLayout.getDistanceFromCell(mDragViewVisualCenter[0],
                     mDragViewVisualCenter[1], mTargetCell);
             if (mCreateUserFolderOnDrop && willCreateUserFolder(d.dragInfo,
@@ -2448,7 +2458,7 @@ public class Workspace extends PagedView
             int[] resultSpan = new int[2];
             mTargetCell = dropTargetLayout.performReorder((int) mDragViewVisualCenter[0],
                     (int) mDragViewVisualCenter[1], minSpanX, minSpanY, spanX, spanY,
-                    null, mTargetCell, resultSpan, CellLayout.MODE_ACCEPT_DROP);
+                    null, mTargetCell, resultSpan, CellLayout.MODE_ACCEPT_DROP, d.dragInfo.itemType);
             boolean foundCell = mTargetCell[0] >= 0 && mTargetCell[1] >= 0;
 
             // Don't accept the drop if there's no room for the item
@@ -2657,7 +2667,7 @@ public class Workspace extends PagedView
                 // dropped, without any consideration to whether there is an item there.
 
                 mTargetCell = findNearestArea((int) mDragViewVisualCenter[0], (int)
-                        mDragViewVisualCenter[1], spanX, spanY, dropTargetLayout, mTargetCell);
+                        mDragViewVisualCenter[1], spanX, spanY, dropTargetLayout, mTargetCell, d.dragInfo.itemType);
                 float distance = dropTargetLayout.getDistanceFromCell(mDragViewVisualCenter[0],
                         mDragViewVisualCenter[1], mTargetCell);
 
@@ -2686,7 +2696,7 @@ public class Workspace extends PagedView
                 int[] resultSpan = new int[2];
                 mTargetCell = dropTargetLayout.performReorder((int) mDragViewVisualCenter[0],
                         (int) mDragViewVisualCenter[1], minSpanX, minSpanY, spanX, spanY, cell,
-                        mTargetCell, resultSpan, CellLayout.MODE_ON_DROP);
+                        mTargetCell, resultSpan, CellLayout.MODE_ON_DROP, d.dragInfo.itemType);
 
                 boolean foundCell = mTargetCell[0] >= 0 && mTargetCell[1] >= 0;
 
@@ -2838,6 +2848,9 @@ public class Workspace extends PagedView
 
     @Override
     public void onDragExit(DragObject d) {
+
+        itemType = -1;
+
         if (ENFORCE_DRAG_EVENT_ORDER) {
             enfoceDragParity("onDragExit", -1, 0);
         }
@@ -3130,7 +3143,7 @@ public class Workspace extends PagedView
 
             mTargetCell = findNearestArea((int) mDragViewVisualCenter[0],
                     (int) mDragViewVisualCenter[1], minSpanX, minSpanY,
-                    mDragTargetLayout, mTargetCell);
+                    mDragTargetLayout, mTargetCell, d.dragInfo.itemType);
             int reorderX = mTargetCell[0];
             int reorderY = mTargetCell[1];
 
@@ -3143,7 +3156,7 @@ public class Workspace extends PagedView
 
             boolean nearestDropOccupied = mDragTargetLayout.isNearestDropLocationOccupied((int)
                             mDragViewVisualCenter[0], (int) mDragViewVisualCenter[1], item.spanX,
-                    item.spanY, child, mTargetCell);
+                    item.spanY, child, mTargetCell, d.dragInfo.itemType);
 
             if (!nearestDropOccupied) {
                 mDragTargetLayout.visualizeDropLocation(child, mOutlineProvider,
@@ -3155,7 +3168,7 @@ public class Workspace extends PagedView
                 int[] resultSpan = new int[2];
                 mDragTargetLayout.performReorder((int) mDragViewVisualCenter[0],
                         (int) mDragViewVisualCenter[1], minSpanX, minSpanY, item.spanX, item.spanY,
-                        child, mTargetCell, resultSpan, CellLayout.MODE_SHOW_REORDER_HINT);
+                        child, mTargetCell, resultSpan, CellLayout.MODE_SHOW_REORDER_HINT, d.dragInfo.itemType);
 
                 // Otherwise, if we aren't adding to or creating a folder and there's no pending
                 // reorder, then we schedule a reorder
@@ -3310,13 +3323,13 @@ public class Workspace extends PagedView
             int[] resultSpan = new int[2];
             mTargetCell = findNearestArea((int) mDragViewVisualCenter[0],
                     (int) mDragViewVisualCenter[1], minSpanX, minSpanY, mDragTargetLayout,
-                    mTargetCell);
+                    mTargetCell, dragObject.dragInfo.itemType);
             mLastReorderX = mTargetCell[0];
             mLastReorderY = mTargetCell[1];
 
             mTargetCell = mDragTargetLayout.performReorder((int) mDragViewVisualCenter[0],
                     (int) mDragViewVisualCenter[1], minSpanX, minSpanY, spanX, spanY,
-                    child, mTargetCell, resultSpan, CellLayout.MODE_DRAG_OVER);
+                    child, mTargetCell, resultSpan, CellLayout.MODE_DRAG_OVER, dragObject.dragInfo.itemType);
 
             if (mTargetCell[0] < 0 || mTargetCell[1] < 0) {
                 mDragTargetLayout.revertTempState();
@@ -3379,7 +3392,7 @@ public class Workspace extends PagedView
             boolean findNearestVacantCell = true;
             if (pendingInfo.itemType == LauncherSettings.Favorites.ITEM_TYPE_SHORTCUT) {
                 mTargetCell = findNearestArea(touchXY[0], touchXY[1], spanX, spanY,
-                        cellLayout, mTargetCell);
+                        cellLayout, mTargetCell, info.itemType);
                 float distance = cellLayout.getDistanceFromCell(mDragViewVisualCenter[0],
                         mDragViewVisualCenter[1], mTargetCell);
                 if (willCreateUserFolder(d.dragInfo, cellLayout, mTargetCell, distance, true)
@@ -3401,7 +3414,7 @@ public class Workspace extends PagedView
                 int[] resultSpan = new int[2];
                 mTargetCell = cellLayout.performReorder((int) mDragViewVisualCenter[0],
                         (int) mDragViewVisualCenter[1], minSpanX, minSpanY, info.spanX, info.spanY,
-                        null, mTargetCell, resultSpan, CellLayout.MODE_ON_DROP_EXTERNAL);
+                        null, mTargetCell, resultSpan, CellLayout.MODE_ON_DROP_EXTERNAL, item.itemType);
 
                 if (resultSpan[0] != item.spanX || resultSpan[1] != item.spanY) {
                     updateWidgetSize = true;
@@ -3469,7 +3482,7 @@ public class Workspace extends PagedView
             // dropped, without any consideration to whether there is an item there.
             if (touchXY != null) {
                 mTargetCell = findNearestArea(touchXY[0], touchXY[1], spanX, spanY,
-                        cellLayout, mTargetCell);
+                        cellLayout, mTargetCell, info.itemType);
                 float distance = cellLayout.getDistanceFromCell(mDragViewVisualCenter[0],
                         mDragViewVisualCenter[1], mTargetCell);
                 d.postAnimationRunnable = exitSpringLoadedRunnable;
@@ -3487,9 +3500,9 @@ public class Workspace extends PagedView
                 // when dragging and dropping, just find the closest free spot
                 mTargetCell = cellLayout.performReorder((int) mDragViewVisualCenter[0],
                         (int) mDragViewVisualCenter[1], 1, 1, 1, 1,
-                        null, mTargetCell, null, CellLayout.MODE_ON_DROP_EXTERNAL);
+                        null, mTargetCell, null, CellLayout.MODE_ON_DROP_EXTERNAL, info.itemType);
             } else {
-                cellLayout.findCellForSpan(mTargetCell, 1, 1);
+                cellLayout.findCellForSpan(mTargetCell, 1, 1, info.itemType);
             }
             // Add the item to DB before adding to screen ensures that the container and other
             // values of the info is properly updated.
@@ -3669,9 +3682,9 @@ public class Workspace extends PagedView
      */
     @Thunk
     int[] findNearestArea(int pixelX, int pixelY,
-                          int spanX, int spanY, CellLayout layout, int[] recycle) {
+                          int spanX, int spanY, CellLayout layout, int[] recycle, int itemType) {
         return layout.findNearestArea(
-                pixelX, pixelY, spanX, spanY, recycle);
+                pixelX, pixelY, spanX, spanY, recycle, itemType);
     }
 
     void setup(DragController dragController) {

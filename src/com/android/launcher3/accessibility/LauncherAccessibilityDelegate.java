@@ -21,10 +21,7 @@ import com.android.launcher3.AppWidgetResizeFrame;
 import com.android.launcher3.BubbleTextView;
 import com.android.launcher3.CellLayout;
 import com.android.launcher3.DeleteDropTarget;
-import com.android.launcher3.DragSource;
 import com.android.launcher3.DropTarget.DragObject;
-import com.android.launcher3.dragndrop.DragOptions;
-import com.android.launcher3.folder.Folder;
 import com.android.launcher3.FolderInfo;
 import com.android.launcher3.InfoDropTarget;
 import com.android.launcher3.ItemInfo;
@@ -39,7 +36,8 @@ import com.android.launcher3.ShortcutInfo;
 import com.android.launcher3.UninstallDropTarget;
 import com.android.launcher3.Workspace;
 import com.android.launcher3.dragndrop.DragController.DragListener;
-import com.android.launcher3.shortcuts.DeepShortcutTextView;
+import com.android.launcher3.dragndrop.DragOptions;
+import com.android.launcher3.folder.Folder;
 import com.android.launcher3.shortcuts.DeepShortcutsContainer;
 import com.android.launcher3.util.Thunk;
 
@@ -72,7 +70,8 @@ public class LauncherAccessibilityDelegate extends AccessibilityDelegate impleme
     }
 
     protected final SparseArray<AccessibilityAction> mActions = new SparseArray<>();
-    @Thunk final Launcher mLauncher;
+    @Thunk
+    final Launcher mLauncher;
 
     private DragInfo mDragInfo = null;
 
@@ -92,7 +91,7 @@ public class LauncherAccessibilityDelegate extends AccessibilityDelegate impleme
         mActions.put(MOVE_TO_WORKSPACE, new AccessibilityAction(MOVE_TO_WORKSPACE,
                 launcher.getText(R.string.action_move_to_workspace)));
         mActions.put(RESIZE, new AccessibilityAction(RESIZE,
-                        launcher.getText(R.string.action_resize)));
+                launcher.getText(R.string.action_resize)));
         mActions.put(DEEP_SHORTCUTS, new AccessibilityAction(DEEP_SHORTCUTS,
                 launcher.getText(R.string.action_deep_shortcut)));
     }
@@ -220,16 +219,16 @@ public class LauncherAccessibilityDelegate extends AccessibilityDelegate impleme
             }
 
             new AlertDialog.Builder(mLauncher)
-                .setTitle(R.string.action_resize)
-                .setItems(labels, new DialogInterface.OnClickListener() {
+                    .setTitle(R.string.action_resize)
+                    .setItems(labels, new DialogInterface.OnClickListener() {
 
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        performResizeAction(actions.get(which), host, info);
-                        dialog.dismiss();
-                    }
-                })
-                .show();
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            performResizeAction(actions.get(which), host, info);
+                            dialog.dismiss();
+                        }
+                    })
+                    .show();
             return true;
         } else if (action == DEEP_SHORTCUTS) {
             return DeepShortcutsContainer.showForIcon((BubbleTextView) host) != null;
@@ -247,8 +246,8 @@ public class LauncherAccessibilityDelegate extends AccessibilityDelegate impleme
 
         CellLayout layout = (CellLayout) host.getParent().getParent();
         if ((providerInfo.resizeMode & AppWidgetProviderInfo.RESIZE_HORIZONTAL) != 0) {
-            if (layout.isRegionVacant(info.cellX + info.spanX, info.cellY, 1, info.spanY) ||
-                    layout.isRegionVacant(info.cellX - 1, info.cellY, 1, info.spanY)) {
+            if (layout.isRegionVacant(info.cellX + info.spanX, info.cellY, 1, info.spanY, info.itemType) ||
+                    layout.isRegionVacant(info.cellX - 1, info.cellY, 1, info.spanY, info.itemType)) {
                 actions.add(R.string.action_increase_width);
             }
 
@@ -258,8 +257,8 @@ public class LauncherAccessibilityDelegate extends AccessibilityDelegate impleme
         }
 
         if ((providerInfo.resizeMode & AppWidgetProviderInfo.RESIZE_VERTICAL) != 0) {
-            if (layout.isRegionVacant(info.cellX, info.cellY + info.spanY, info.spanX, 1) ||
-                    layout.isRegionVacant(info.cellX, info.cellY - 1, info.spanX, 1)) {
+            if (layout.isRegionVacant(info.cellX, info.cellY + info.spanY, info.spanX, 1, info.itemType) ||
+                    layout.isRegionVacant(info.cellX, info.cellY - 1, info.spanX, 1, info.itemType)) {
                 actions.add(R.string.action_increase_height);
             }
 
@@ -270,33 +269,34 @@ public class LauncherAccessibilityDelegate extends AccessibilityDelegate impleme
         return actions;
     }
 
-    @Thunk void performResizeAction(int action, View host, LauncherAppWidgetInfo info) {
+    @Thunk
+    void performResizeAction(int action, View host, LauncherAppWidgetInfo info) {
         CellLayout.LayoutParams lp = (CellLayout.LayoutParams) host.getLayoutParams();
         CellLayout layout = (CellLayout) host.getParent().getParent();
         layout.markCellsAsUnoccupiedForView(host);
 
         if (action == R.string.action_increase_width) {
             if (((host.getLayoutDirection() == View.LAYOUT_DIRECTION_RTL)
-                    && layout.isRegionVacant(info.cellX - 1, info.cellY, 1, info.spanY))
-                    || !layout.isRegionVacant(info.cellX + info.spanX, info.cellY, 1, info.spanY)) {
-                lp.cellX --;
-                info.cellX --;
+                    && layout.isRegionVacant(info.cellX - 1, info.cellY, 1, info.spanY, info.itemType))
+                    || !layout.isRegionVacant(info.cellX + info.spanX, info.cellY, 1, info.spanY, info.itemType)) {
+                lp.cellX--;
+                info.cellX--;
             }
-            lp.cellHSpan ++;
-            info.spanX ++;
+            lp.cellHSpan++;
+            info.spanX++;
         } else if (action == R.string.action_decrease_width) {
-            lp.cellHSpan --;
-            info.spanX --;
+            lp.cellHSpan--;
+            info.spanX--;
         } else if (action == R.string.action_increase_height) {
-            if (!layout.isRegionVacant(info.cellX, info.cellY + info.spanY, info.spanX, 1)) {
-                lp.cellY --;
-                info.cellY --;
+            if (!layout.isRegionVacant(info.cellX, info.cellY + info.spanY, info.spanX, 1, info.itemType)) {
+                lp.cellY--;
+                info.cellY--;
             }
-            lp.cellVSpan ++;
-            info.spanY ++;
+            lp.cellVSpan++;
+            info.spanY++;
         } else if (action == R.string.action_decrease_height) {
-            lp.cellVSpan --;
-            info.spanY --;
+            lp.cellVSpan--;
+            info.spanY--;
         }
 
         layout.markCellsAsOccupiedForView(host);
@@ -309,11 +309,13 @@ public class LauncherAccessibilityDelegate extends AccessibilityDelegate impleme
         announceConfirmation(mLauncher.getString(R.string.widget_resized, info.spanX, info.spanY));
     }
 
-    @Thunk void announceConfirmation(int resId) {
+    @Thunk
+    void announceConfirmation(int resId) {
         announceConfirmation(mLauncher.getResources().getString(resId));
     }
 
-    @Thunk void announceConfirmation(String confirmation) {
+    @Thunk
+    void announceConfirmation(String confirmation) {
         mLauncher.getDragLayer().announceForAccessibility(confirmation);
 
     }
@@ -328,11 +330,11 @@ public class LauncherAccessibilityDelegate extends AccessibilityDelegate impleme
 
     /**
      * @param clickedTarget the actual view that was clicked
-     * @param dropLocation relative to {@param clickedTarget}. If provided, its center is used
-     * as the actual drop location otherwise the views center is used.
+     * @param dropLocation  relative to {@param clickedTarget}. If provided, its center is used
+     *                      as the actual drop location otherwise the views center is used.
      */
     public void handleAccessibleDrop(View clickedTarget, Rect dropLocation,
-            String confirmation) {
+                                     String confirmation) {
         if (!isInAccessibleDrag()) return;
 
         int[] loc = new int[2];
@@ -414,12 +416,12 @@ public class LauncherAccessibilityDelegate extends AccessibilityDelegate impleme
         screenId = workspaceScreens.get(screenIndex);
         CellLayout layout = (CellLayout) workspace.getPageAt(screenIndex);
 
-        boolean found = layout.findCellForSpan(outCoordinates, info.spanX, info.spanY);
+        boolean found = layout.findCellForSpan(outCoordinates, info.spanX, info.spanY, info.itemType);
         screenIndex = workspace.hasCustomContent() ? 1 : 0;
         while (!found && screenIndex < workspaceScreens.size()) {
             screenId = workspaceScreens.get(screenIndex);
             layout = (CellLayout) workspace.getPageAt(screenIndex);
-            found = layout.findCellForSpan(outCoordinates, info.spanX, info.spanY);
+            found = layout.findCellForSpan(outCoordinates, info.spanX, info.spanY, info.itemType);
             screenIndex++;
         }
 
@@ -430,7 +432,7 @@ public class LauncherAccessibilityDelegate extends AccessibilityDelegate impleme
         workspace.addExtraEmptyScreen();
         screenId = workspace.commitExtraEmptyScreen();
         layout = workspace.getScreenWithId(screenId);
-        found = layout.findCellForSpan(outCoordinates, info.spanX, info.spanY);
+        found = layout.findCellForSpan(outCoordinates, info.spanX, info.spanY, info.itemType);
 
         if (!found) {
             Log.wtf(TAG, "Not enough space on an empty screen");

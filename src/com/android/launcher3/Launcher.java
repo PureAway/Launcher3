@@ -1546,7 +1546,7 @@ public class Launcher extends Activity
                 return;
             }
         } else {
-            foundCellSpan = layout.findCellForSpan(cellXY, 1, 1);
+            foundCellSpan = layout.findCellForSpan(cellXY, 1, 1, info.itemType);
         }
 
         if (!foundCellSpan) {

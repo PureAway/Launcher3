@@ -443,7 +443,7 @@ public class LauncherModel extends BroadcastReceiver
                 occupied.markCells(r, true);
             }
         }
-        return occupied.findVacantCell(xy, spanX, spanY);
+        return occupied.findVacantCell(xy, spanX, spanY, LauncherSettings.Favorites.ITEM_TYPE_APPLICATION);
     }
 
     /**
