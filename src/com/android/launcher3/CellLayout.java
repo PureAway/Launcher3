@@ -67,6 +67,9 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Stack;
 
+import static android.R.attr.end;
+import static android.R.attr.start;
+
 public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
     public static final int WORKSPACE_ACCESSIBILITY_DRAG = 2;
     public static final int FOLDER_ACCESSIBILITY_DRAG = 1;
@@ -521,13 +524,22 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
 
         int itemType = mLauncher.mWorkspace.getItemType();
 
-        boolean drawBg = true;
-
         if (this == mLauncher.mWorkspace.getChildAt(0)) {
-            drawBg = false;
-        }
-
-        if (itemType != -1 && drawBg) {
+            if (mDragging) {
+                int[] pt = new int[2];
+                ColorDrawable cd = new ColorDrawable(Color.parseColor("#55550000"));
+                cd.setBounds(0, 0, mCellWidth, mCellHeight);
+                for (int i = 0; i < mCountX; i++) {
+                    for (int j = 0; j < mCountY; j++) {
+                        cellToPoint(i, j, pt);
+                        canvas.save();
+                        canvas.translate(pt[0], pt[1]);
+                        cd.draw(canvas);
+                        canvas.restore();
+                    }
+                }
+            }
+        } else if (itemType != -1 && !isHotseat() && mDragging) {
             int start, end;
             if (itemType == Favorites.ITEM_TYPE_APPWIDGET
                     || itemType == Favorites.ITEM_TYPE_CUSTOM_APPWIDGET
@@ -550,28 +562,27 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
                     canvas.restore();
                 }
             }
-        }
 
-
-        for (int i = 0; i < mFolderBackgrounds.size(); i++) {
-            FolderIcon.PreviewBackground bg = mFolderBackgrounds.get(i);
-            cellToPoint(bg.delegateCellX, bg.delegateCellY, mTempLocation);
-            canvas.save();
-            canvas.translate(mTempLocation[0], mTempLocation[1]);
-            bg.drawBackground(canvas, mFolderBgPaint);
-            if (!bg.isClipping) {
-                bg.drawBackgroundStroke(canvas, mFolderBgPaint);
+            for (int i = 0; i < mFolderBackgrounds.size(); i++) {
+                FolderIcon.PreviewBackground bg = mFolderBackgrounds.get(i);
+                cellToPoint(bg.delegateCellX, bg.delegateCellY, mTempLocation);
+                canvas.save();
+                canvas.translate(mTempLocation[0], mTempLocation[1]);
+                bg.drawBackground(canvas, mFolderBgPaint);
+                if (!bg.isClipping) {
+                    bg.drawBackgroundStroke(canvas, mFolderBgPaint);
+                }
+                canvas.restore();
             }
-            canvas.restore();
-        }
 
-        if (mFolderLeaveBehind.delegateCellX >= 0 && mFolderLeaveBehind.delegateCellY >= 0) {
-            cellToPoint(mFolderLeaveBehind.delegateCellX,
-                    mFolderLeaveBehind.delegateCellY, mTempLocation);
-            canvas.save();
-            canvas.translate(mTempLocation[0], mTempLocation[1]);
-            mFolderLeaveBehind.drawLeaveBehind(canvas, mFolderBgPaint);
-            canvas.restore();
+            if (mFolderLeaveBehind.delegateCellX >= 0 && mFolderLeaveBehind.delegateCellY >= 0) {
+                cellToPoint(mFolderLeaveBehind.delegateCellX,
+                        mFolderLeaveBehind.delegateCellY, mTempLocation);
+                canvas.save();
+                canvas.translate(mTempLocation[0], mTempLocation[1]);
+                mFolderLeaveBehind.drawLeaveBehind(canvas, mFolderBgPaint);
+                canvas.restore();
+            }
         }
     }
 
@@ -2644,6 +2655,7 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
      */
     void onDragEnter() {
         mDragging = true;
+        invalidate();
     }
 
     /**
