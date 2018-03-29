@@ -860,8 +860,6 @@ public class LauncherModel extends BroadcastReceiver
         updateItemInDatabaseHelper(context, values, item, "updateItemInDatabase");
     }
 
-    //该方法是检查Launcher在加载过程中向桌面添加快捷方式
-    //注释掉的原因是我们的需求是要将所有apps的快捷方式添加至桌面，抽屉不显示
     private void assertWorkspaceLoaded() {
         if (ProviderConfig.IS_DOGFOOD_BUILD) {
             synchronized (mLock) {

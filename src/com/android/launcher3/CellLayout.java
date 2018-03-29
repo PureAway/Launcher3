@@ -480,6 +480,9 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
         return mIsDragOverlapping;
     }
 
+    private int[] pt = new int[2];
+    private ColorDrawable cd = new ColorDrawable(Color.parseColor("#55550000"));
+
     @Override
     protected void onDraw(Canvas canvas) {
         if (!mIsDragTarget) {
@@ -505,29 +508,10 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
             }
         }
 
-        if (DEBUG_VISUALIZE_OCCUPIED) {
-            int[] pt = new int[2];
-            ColorDrawable cd = new ColorDrawable(Color.RED);
-            cd.setBounds(0, 0, mCellWidth, mCellHeight);
-            for (int i = 0; i < mCountX; i++) {
-                for (int j = 0; j < mCountY; j++) {
-                    if (mOccupied.cells[i][j]) {
-                        cellToPoint(i, j, pt);
-                        canvas.save();
-                        canvas.translate(pt[0], pt[1]);
-                        cd.draw(canvas);
-                        canvas.restore();
-                    }
-                }
-            }
-        }
-
         int itemType = mLauncher.mWorkspace.getItemType();
 
         if (this == mLauncher.mWorkspace.getChildAt(0)) {
             if (mDragging) {
-                int[] pt = new int[2];
-                ColorDrawable cd = new ColorDrawable(Color.parseColor("#55550000"));
                 cd.setBounds(0, 0, mCellWidth, mCellHeight);
                 for (int i = 0; i < mCountX; i++) {
                     for (int j = 0; j < mCountY; j++) {
@@ -539,7 +523,7 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
                     }
                 }
             }
-        } else if (itemType != -1 && !isHotseat() && mDragging) {
+        } else if (mDragging && !isHotseat()) {
             int start, end;
             if (itemType == Favorites.ITEM_TYPE_APPWIDGET
                     || itemType == Favorites.ITEM_TYPE_CUSTOM_APPWIDGET
@@ -550,8 +534,6 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
                 start = 0;
                 end = mCountY - 2;
             }
-            int[] pt = new int[2];
-            ColorDrawable cd = new ColorDrawable(Color.parseColor("#55550000"));
             cd.setBounds(0, 0, mCellWidth, mCellHeight);
             for (int i = 0; i < mCountX; i++) {
                 for (int j = start; j < end; j++) {
@@ -562,6 +544,7 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
                     canvas.restore();
                 }
             }
+
 
             for (int i = 0; i < mFolderBackgrounds.size(); i++) {
                 FolderIcon.PreviewBackground bg = mFolderBackgrounds.get(i);
@@ -584,6 +567,8 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
                 canvas.restore();
             }
         }
+        pt[0] = 0;
+        pt[1] = 0;
     }
 
     @Override
@@ -1752,15 +1737,20 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
 
         int startY;
         int endY;
-        if (itemType == LauncherSettings.Favorites.ITEM_TYPE_APPWIDGET
-                || itemType == LauncherSettings.Favorites.ITEM_TYPE_CUSTOM_APPWIDGET
-                || itemType == Favorites.ITEM_TYPE_SHORTCUT) {
-            //小控件
+        if (isHotseat()) {
             startY = 0;
-            endY = mCountY - 2;
+            endY = 0;
         } else {
-            startY = mCountY - 2;
-            endY = mCountY;
+            if (itemType == LauncherSettings.Favorites.ITEM_TYPE_APPWIDGET
+                    || itemType == LauncherSettings.Favorites.ITEM_TYPE_CUSTOM_APPWIDGET
+                    || itemType == Favorites.ITEM_TYPE_SHORTCUT) {
+                //小控件
+                startY = 0;
+                endY = mCountY - 2;
+            } else {
+                startY = mCountY - 2;
+                endY = mCountY;
+            }
         }
 
         // Due to the nature of the algorithm, the only check required to verify a valid solution
