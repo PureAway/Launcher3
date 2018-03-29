@@ -3740,6 +3740,7 @@ public class Workspace extends PagedView
                     Launcher.EXIT_SPRINGLOADED_MODE_SHORT_TIMEOUT, mDelayedResizeRunnable);
             mDelayedResizeRunnable = null;
         }
+
     }
 
     /**
@@ -3798,7 +3799,7 @@ public class Workspace extends PagedView
 
     @Override
     public boolean supportsFlingToDelete() {
-        return true;
+        return false;
     }
 
     @Override

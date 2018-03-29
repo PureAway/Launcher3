@@ -2,6 +2,8 @@ package com.android.launcher3.util;
 
 import android.test.suitebuilder.annotation.SmallTest;
 
+import com.android.launcher3.LauncherSettings;
+
 import junit.framework.TestCase;
 
 /**
@@ -19,15 +21,15 @@ public class GridOccupancyTest extends TestCase {
                 );
 
         int[] vacant = new int[2];
-        assertTrue(grid.findVacantCell(vacant, 2, 2));
+        assertTrue(grid.findVacantCell(vacant, 2, 2, LauncherSettings.Favorites.ITEM_TYPE_SHORTCUT));
         assertEquals(vacant[0], 0);
         assertEquals(vacant[1], 1);
 
-        assertTrue(grid.findVacantCell(vacant, 3, 2));
+        assertTrue(grid.findVacantCell(vacant, 3, 2, LauncherSettings.Favorites.ITEM_TYPE_SHORTCUT));
         assertEquals(vacant[0], 2);
         assertEquals(vacant[1], 2);
 
-        assertFalse(grid.findVacantCell(vacant, 3, 3));
+        assertFalse(grid.findVacantCell(vacant, 3, 3, LauncherSettings.Favorites.ITEM_TYPE_SHORTCUT));
     }
 
     public void testIsRegionVacant() {
