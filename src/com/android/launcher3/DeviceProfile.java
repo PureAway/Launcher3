@@ -59,7 +59,7 @@ public class DeviceProfile {
      * To be clear, this means that up to 7% of the screen width can be used as left padding, and
      * 7% of the screen width can be used as right padding.
      */
-    private static final float MAX_HORIZONTAL_PADDING_PERCENT = 0.14f;
+    private static final float MAX_HORIZONTAL_PADDING_PERCENT = 0.06f;
 
     // Overview mode
     private final int overviewModeMinIconZoneHeightPx;
@@ -249,10 +249,13 @@ public class DeviceProfile {
 
     private void updateIconSize(float scale, int drawablePadding, Resources res,
                                 DisplayMetrics dm) {
-        iconSizePx = (int) (Utilities.pxFromDp(inv.iconSize, dm) * scale);
-        iconTextSizePx = (int) (Utilities.pxFromSp(inv.iconTextSize, dm) * scale);
+//        iconSizePx = (int) (Utilities.pxFromDp(inv.iconSize, dm) * scale);
+        iconSizePx = 100;
+//        iconTextSizePx = (int) (Utilities.pxFromSp(inv.iconTextSize, dm) * scale);
+        iconTextSizePx = 20;
         iconDrawablePaddingPx = drawablePadding;
-        hotseatIconSizePx = (int) (Utilities.pxFromDp(inv.hotseatIconSize, dm) * scale);
+//        hotseatIconSizePx = (int) (Utilities.pxFromDp(inv.hotseatIconSize, dm) * scale);
+        hotseatIconSizePx = 100;
         allAppsIconSizePx = iconSizePx;
         allAppsIconDrawablePaddingPx = iconDrawablePaddingPx;
         allAppsIconTextSizePx = iconTextSizePx;
@@ -267,7 +270,7 @@ public class DeviceProfile {
         // Hotseat
         hotseatCellWidthPx = iconSizePx;
         hotseatCellHeightPx = iconSizePx;
-        hotseatBarTopPaddingPx = (hotseatBarHeightPx - hotseatCellHeightPx) / 2;
+        hotseatBarTopPaddingPx = (hotseatBarHeightPx - iconSizePx) / 2;
         if (!isVerticalBarLayout()) {
             int expectedWorkspaceHeight = availableHeightPx - hotseatBarHeightPx
                     - pageIndicatorHeightPx - topWorkspacePadding;
@@ -510,7 +513,7 @@ public class DeviceProfile {
             lp.gravity = Gravity.RIGHT;
             lp.width = hotseatBarHeightPx + mInsets.left + mInsets.right;
             lp.height = LayoutParams.MATCH_PARENT;
-            hotseat.getLayout().setPadding(mInsets.left, mInsets.top, mInsets.right,
+            hotseat.getLayout().setPadding(mInsets.left, 0, mInsets.right,
                     workspacePadding.bottom);
         } else if (isTablet) {
             // Pad the hotseat with the workspace padding calculated above
@@ -518,7 +521,7 @@ public class DeviceProfile {
             lp.width = LayoutParams.MATCH_PARENT;
             lp.height = hotseatBarHeightPx + mInsets.bottom;
             hotseat.getLayout().setPadding(hotseatAdjustment + workspacePadding.left,
-                    hotseatBarTopPaddingPx, hotseatAdjustment + workspacePadding.right,
+                    0, hotseatAdjustment + workspacePadding.right,
                     mInsets.bottom);
         } else {
             // For phones, layout the hotseat without any bottom margin
@@ -527,7 +530,7 @@ public class DeviceProfile {
             lp.width = LayoutParams.MATCH_PARENT;
             lp.height = hotseatBarHeightPx + mInsets.bottom;
             hotseat.getLayout().setPadding(hotseatAdjustment + workspacePadding.left,
-                    hotseatBarTopPaddingPx, hotseatAdjustment + workspacePadding.right,
+                    0, hotseatAdjustment + workspacePadding.right,
                     mInsets.bottom);
         }
         hotseat.setLayoutParams(lp);

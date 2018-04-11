@@ -21,6 +21,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
 import android.content.Context;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.ColorDrawable;
@@ -70,9 +71,18 @@ public class Hotseat extends FrameLayout
         mLauncher = Launcher.getLauncher(context);
         mHasVerticalHotseat = mLauncher.getDeviceProfile().isVerticalBarLayout();
         mBackgroundColor = ColorUtils.setAlphaComponent(
-                ContextCompat.getColor(context, R.color.hot_seat_bg_color), 50);
+                ContextCompat.getColor(context, R.color.hot_seat_bg_color), 120);
         mBackground = new ColorDrawable(mBackgroundColor);
+        mBackground.setBounds(0, 2, getWidth(), getHeight());
         setBackground(mBackground);
+    }
+
+    @Override
+    protected void dispatchDraw(Canvas canvas) {
+        super.dispatchDraw(canvas);
+        ColorDrawable colorDrawable = new ColorDrawable(Color.parseColor("#FFFFFF"));
+        colorDrawable.setBounds(0, 0, getWidth(), 2);
+        colorDrawable.draw(canvas);
     }
 
     public CellLayout getLayout() {

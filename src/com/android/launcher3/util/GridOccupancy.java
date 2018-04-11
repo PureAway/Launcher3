@@ -34,7 +34,7 @@ public class GridOccupancy {
         if (itemType == LauncherSettings.Favorites.ITEM_TYPE_APPWIDGET
                 || itemType == LauncherSettings.Favorites.ITEM_TYPE_CUSTOM_APPWIDGET
                 || itemType == LauncherSettings.Favorites.ITEM_TYPE_SHORTCUT) {
-            //小控件
+            //appWidget
             for (int y = 0; (y + spanY) <= mCountY - 2; y++) {
                 for (int x = 0; (x + spanX) <= mCountX; x++) {
                     boolean available = !cells[x][y];
@@ -53,7 +53,7 @@ public class GridOccupancy {
                 }
             }
         } else {
-            //其他
+            //appShortcut
             for (int y = mCountY - 2; (y + spanY) <= mCountY; y++) {
                 for (int x = 0; (x + spanX) <= mCountX; x++) {
                     boolean available = !cells[x][y];
@@ -108,12 +108,12 @@ public class GridOccupancy {
         if (itemType == LauncherSettings.Favorites.ITEM_TYPE_APPWIDGET
                 || itemType == LauncherSettings.Favorites.ITEM_TYPE_CUSTOM_APPWIDGET
                 || itemType == LauncherSettings.Favorites.ITEM_TYPE_SHORTCUT) {
-            //小控件
+            //appWidget
             if (y + spanY >= mCountY - 2) {
                 return false;
             }
         } else {
-            //其他
+            //appShortcut
             if (y < mCountY - 2) {
                 return false;
             }

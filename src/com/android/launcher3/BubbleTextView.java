@@ -24,6 +24,7 @@ import android.content.res.Resources.Theme;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Region;
 import android.graphics.drawable.ColorDrawable;
@@ -119,20 +120,24 @@ public class BubbleTextView extends TextView
                 a.getBoolean(R.styleable.BubbleTextView_deferShadowGeneration, false);
 
         int display = a.getInteger(R.styleable.BubbleTextView_iconDisplay, DISPLAY_WORKSPACE);
-        int defaultIconSize = grid.iconSizePx;
+//        int defaultIconSize = grid.iconSizePx;
+        int defaultIconSize = 100;
         if (display == DISPLAY_WORKSPACE) {
-            setTextSize(TypedValue.COMPLEX_UNIT_PX, grid.iconTextSizePx);
+//            setTextSize(TypedValue.COMPLEX_UNIT_PX, grid.iconTextSizePx);
+            setTextSize(TypedValue.COMPLEX_UNIT_PX, 20);
         } else if (display == DISPLAY_ALL_APPS) {
-            setTextSize(TypedValue.COMPLEX_UNIT_PX, grid.allAppsIconTextSizePx);
+//            setTextSize(TypedValue.COMPLEX_UNIT_PX, grid.allAppsIconTextSizePx);
             setCompoundDrawablePadding(grid.allAppsIconDrawablePaddingPx);
+            setTextSize(TypedValue.COMPLEX_UNIT_PX, 20);
             defaultIconSize = grid.allAppsIconSizePx;
         } else if (display == DISPLAY_FOLDER) {
             setCompoundDrawablePadding(grid.folderChildDrawablePaddingPx);
         }
         mCenterVertically = a.getBoolean(R.styleable.BubbleTextView_centerVertically, false);
 
-        mIconSize = a.getDimensionPixelSize(R.styleable.BubbleTextView_iconSizeOverride,
-                defaultIconSize);
+//        mIconSize = a.getDimensionPixelSize(R.styleable.BubbleTextView_iconSizeOverride,
+//                defaultIconSize);
+        mIconSize = defaultIconSize;
         a.recycle();
 
         if (mCustomShadowsEnabled) {
@@ -159,7 +164,7 @@ public class BubbleTextView extends TextView
     }
 
     public void applyFromShortcutInfo(ShortcutInfo info, IconCache iconCache,
-            boolean promiseStateChanged) {
+                                      boolean promiseStateChanged) {
         applyIconAndLabel(info.getIcon(iconCache), info);
         setTag(info);
         if (promiseStateChanged || info.isPromise()) {
@@ -246,12 +251,16 @@ public class BubbleTextView extends TextView
         }
     }
 
-    /** Returns the icon for this view. */
+    /**
+     * Returns the icon for this view.
+     */
     public Drawable getIcon() {
         return mIcon;
     }
 
-    /** Returns whether the layout is horizontal. */
+    /**
+     * Returns whether the layout is horizontal.
+     */
     public boolean isLayoutHorizontal() {
         return mLayoutHorizontal;
     }
@@ -390,7 +399,7 @@ public class BubbleTextView extends TextView
             final int scrollY = getScrollY();
 
             if (mBackgroundSizeChanged) {
-                background.setBounds(0, 0,  getRight() - getLeft(), getBottom() - getTop());
+                background.setBounds(0, 0, getRight() - getLeft(), getBottom() - getTop());
                 mBackgroundSizeChanged = false;
             }
 
@@ -457,7 +466,8 @@ public class BubbleTextView extends TextView
 
     @Override
     public void setTextColor(int color) {
-        mTextColor = color;
+//        mTextColor = color;
+        mTextColor = Color.parseColor("#FFFFFF");
         super.setTextColor(color);
     }
 
@@ -492,8 +502,8 @@ public class BubbleTextView extends TextView
                             info.getInstallProgress() : 0)) : 100;
 
             setContentDescription(progressLevel > 0 ?
-                getContext().getString(R.string.app_downloading_title, info.title,
-                        NumberFormat.getPercentInstance().format(progressLevel * 0.01)) :
+                    getContext().getString(R.string.app_downloading_title, info.title,
+                            NumberFormat.getPercentInstance().format(progressLevel * 0.01)) :
                     getContext().getString(R.string.app_waiting_download_title, info.title));
 
             if (mIcon != null) {
@@ -517,7 +527,7 @@ public class BubbleTextView extends TextView
         Object tag = getTag();
         int style = ((tag != null) && (tag instanceof ShortcutInfo) &&
                 (((ShortcutInfo) tag).container >= 0)) ? R.style.PreloadIcon_Folder
-                        : R.style.PreloadIcon;
+                : R.style.PreloadIcon;
         Theme theme = sPreloaderThemes.get(style);
         if (theme == null) {
             theme = getResources().newTheme();
@@ -640,7 +650,7 @@ public class BubbleTextView extends TextView
                 animate().scaleX(focusState.viewScale)
                         .scaleY(focusState.viewScale)
                         .setStartDelay(getStartDelayForStateChange(prevState, focusState))
-                        .setDuration(d.getDurationForStateChange(prevState, focusState))
+                        .setDuration(FastBitmapDrawable.getDurationForStateChange(prevState, focusState))
                         .start();
             }
         } else {
@@ -664,7 +674,7 @@ public class BubbleTextView extends TextView
      * Returns the start delay when animating between certain {@link FastBitmapDrawable} states.
      */
     private static int getStartDelayForStateChange(final FastBitmapDrawable.State fromState,
-            final FastBitmapDrawable.State toState) {
+                                                   final FastBitmapDrawable.State toState) {
         switch (toState) {
             case NORMAL:
                 switch (fromState) {

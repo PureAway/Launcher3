@@ -654,7 +654,7 @@ public class Workspace extends PagedView
                             ? R.layout.qsb_container : R.layout.qsb_blocker_view,
                     firstPage, false);
         }
-        // 搜索栏沾满
+        // fill the QsbContainerView
         CellLayout.LayoutParams lp = new CellLayout.LayoutParams(0, 0, firstPage.getCountX(), firstPage.getCountY());
         lp.canReorder = false;
         if (!firstPage.addViewToCellLayout(qsb, 0, getEmbeddedQsbId(), lp, true)) {
@@ -669,7 +669,7 @@ public class Workspace extends PagedView
         // Update the QSB to match the cell height. This is treating the QSB essentially as a child
         // of workspace despite that it's not a true child.
         // Note that it relies on the strict ordering of measuring the workspace before the QSB
-        // at the dragLayer level.
+        // at the dragLayer level
 //        if (getChildCount() > 0) {
 //            CellLayout firstPage = (CellLayout) getChildAt(0);
 //            int cellHeight = firstPage.getCellHeight();
@@ -2300,6 +2300,7 @@ public class Workspace extends PagedView
         return null;
     }
 
+
     public void startDrag(CellLayout.CellInfo cellInfo, DragOptions options) {
         View child = cellInfo.cell;
 
@@ -2311,6 +2312,9 @@ public class Workspace extends PagedView
         mDragInfo = cellInfo;
         child.setVisibility(INVISIBLE);
         CellLayout layout = (CellLayout) child.getParent().getParent();
+
+        mLauncher.getHotseat().getLayout().setIsFromDesktop(!(mLauncher.getHotseat().getLayout() == layout));
+
         layout.prepareChildForDrag(child);
 
         if (options.isAccessibleDrag) {
@@ -2549,6 +2553,9 @@ public class Workspace extends PagedView
                                         int[] targetCell, float distance, boolean external, DragView dragView,
                                         Runnable postAnimationRunnable) {
         if (distance > mMaxDistanceForFolderCreation) return false;
+        if (mLauncher.isHotseatLayout(target)) {
+            return false;
+        }
         View v = target.getChildAt(targetCell[0], targetCell[1]);
 
         boolean hasntMoved = false;
@@ -2634,6 +2641,7 @@ public class Workspace extends PagedView
         mDragViewVisualCenter = d.getVisualCenter(mDragViewVisualCenter);
         CellLayout dropTargetLayout = mDropToLayout;
 
+
         // We want the point to be mapped to the dragTarget.
         if (dropTargetLayout != null) {
             if (mLauncher.isHotseatLayout(dropTargetLayout)) {
@@ -2677,7 +2685,6 @@ public class Workspace extends PagedView
                         dropTargetLayout, mTargetCell, distance, false, d.dragView, null)) {
                     return;
                 }
-
                 if (addToExistingFolderIfNecessary(cell, dropTargetLayout, mTargetCell,
                         distance, d, false)) {
                     return;
@@ -2699,6 +2706,11 @@ public class Workspace extends PagedView
                         mTargetCell, resultSpan, CellLayout.MODE_ON_DROP, d.dragInfo.itemType);
 
                 boolean foundCell = mTargetCell[0] >= 0 && mTargetCell[1] >= 0;
+
+                boolean isHotseat = dropTargetLayout.isHotseat();
+                if (isHotseat && dropTargetLayout.getShortcutsAndWidgets().getChildCount() == 9) {
+                    foundCell = false;
+                }
 
                 // if the widget resizes on drop
                 if (foundCell && (cell instanceof AppWidgetHostView) &&
@@ -2850,6 +2862,8 @@ public class Workspace extends PagedView
     public void onDragExit(DragObject d) {
 
         itemType = -1;
+
+        mLauncher.getHotseat().getLayout().setIsFromDesktop(false);
 
         if (ENFORCE_DRAG_EVENT_ORDER) {
             enfoceDragParity("onDragExit", -1, 0);

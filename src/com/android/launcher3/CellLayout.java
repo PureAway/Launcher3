@@ -67,8 +67,13 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Stack;
 
+import static android.R.attr.bottom;
 import static android.R.attr.end;
 import static android.R.attr.start;
+import static android.R.attr.startX;
+import static android.R.attr.startY;
+import static android.R.attr.top;
+import static android.R.attr.width;
 
 public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
     public static final int WORKSPACE_ACCESSIBILITY_DRAG = 2;
@@ -233,7 +238,7 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
 
         setAlwaysDrawnWithCacheEnabled(false);
         final Resources res = getResources();
-        mHotseatScale = (float) grid.hotseatIconSizePx / grid.iconSizePx;
+        mHotseatScale = 1.0f;
 
         mBackground = (TransitionDrawable) res.getDrawable(
                 FeatureFlags.LAUNCHER3_LEGACY_WORKSPACE_DND ? R.drawable.bg_screenpanel
@@ -378,7 +383,7 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
     }
 
     public float getChildrenScale() {
-        return mIsHotseat ? mHotseatScale : 1.0f;
+        return 1.0f;
     }
 
     public void setCellDimensions(int width, int height) {
@@ -485,6 +490,7 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
 
     @Override
     protected void onDraw(Canvas canvas) {
+
         if (!mIsDragTarget) {
             return;
         }
@@ -510,41 +516,25 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
 
         int itemType = mLauncher.mWorkspace.getItemType();
 
+        int top, bottom;
+
         if (this == mLauncher.mWorkspace.getChildAt(0)) {
             if (mDragging) {
-                cd.setBounds(0, 0, mCellWidth, mCellHeight);
-                for (int i = 0; i < mCountX; i++) {
-                    for (int j = 0; j < mCountY; j++) {
-                        cellToPoint(i, j, pt);
-                        canvas.save();
-                        canvas.translate(pt[0], pt[1]);
-                        cd.draw(canvas);
-                        canvas.restore();
-                    }
-                }
+                cd.setBounds(0, 0, getWidth(), getHeight());
+                cd.draw(canvas);
             }
         } else if (mDragging && !isHotseat()) {
-            int start, end;
             if (itemType == Favorites.ITEM_TYPE_APPWIDGET
                     || itemType == Favorites.ITEM_TYPE_CUSTOM_APPWIDGET
                     || itemType == Favorites.ITEM_TYPE_SHORTCUT) {
-                start = mCountY - 2 > 0 ? mCountY - 2 : 0;
-                end = mCountY;
+                top = getHeight() / 2;
+                bottom = getHeight();
             } else {
-                start = 0;
-                end = mCountY - 2;
+                top = 0;
+                bottom = getHeight() / 2;
             }
-            cd.setBounds(0, 0, mCellWidth, mCellHeight);
-            for (int i = 0; i < mCountX; i++) {
-                for (int j = start; j < end; j++) {
-                    cellToPoint(i, j, pt);
-                    canvas.save();
-                    canvas.translate(pt[0], pt[1]);
-                    cd.draw(canvas);
-                    canvas.restore();
-                }
-            }
-
+            cd.setBounds(0, top, getWidth(), bottom);
+            cd.draw(canvas);
 
             for (int i = 0; i < mFolderBackgrounds.size(); i++) {
                 FolderIcon.PreviewBackground bg = mFolderBackgrounds.get(i);
@@ -669,16 +659,18 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
         final LayoutParams lp = params;
 
         // Hotseat icons - remove text
-        if (child instanceof BubbleTextView) {
-            BubbleTextView bubbleChild = (BubbleTextView) child;
-            bubbleChild.setTextVisibility(!mIsHotseat);
-        }
+//        if (child instanceof BubbleTextView) {
+//            BubbleTextView bubbleChild = (BubbleTextView) child;
+//            bubbleChild.setTextVisibility(!mIsHotseat);
+//        }
 
         child.setScaleX(getChildrenScale());
         child.setScaleY(getChildrenScale());
 
         // Generate an id for each view, this assumes we have at most 256x256 cells
         // per workspace screen
+
+
         if (lp.cellX >= 0 && lp.cellX <= mCountX - 1 && lp.cellY >= 0 && lp.cellY <= mCountY - 1) {
             // If the horizontal or vertical span is set to -1, it is taken to
             // mean that it spans the extent of the CellLayout
@@ -688,6 +680,10 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
             child.setId(childId);
             if (LOGD) {
                 Log.d(TAG, "Adding view to ShortcutsAndWidgetsContainer: " + child);
+            }
+
+            if (isHotseat() && mShortcutsAndWidgets.getChildCount() == 9) {
+                return false;
             }
             mShortcutsAndWidgets.addView(child, index, lp);
 
@@ -716,18 +712,59 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
     public void removeView(View view) {
         markCellsAsUnoccupiedForView(view);
         mShortcutsAndWidgets.removeView(view);
+        if (isHotseat()) {
+            resetLayoutIndex();
+        }
+    }
+
+    private Comparator<View> comparator = new Comparator<View>() {
+        @Override
+        public int compare(View o1, View o2) {
+            return ((CellLayout.LayoutParams) o1.getLayoutParams()).x - ((CellLayout.LayoutParams) o2.getLayoutParams()).x;
+        }
+    };
+
+    private void resetLayoutIndex() {
+        int childCount = mShortcutsAndWidgets.getChildCount();
+        if (childCount == 0) {
+            return;
+        }
+        int tempIndex = 0;
+        ArrayList<View> views = new ArrayList<>();
+        for (int i = 0; i < childCount; i++) {
+            views.add(mShortcutsAndWidgets.getChildAt(i));
+        }
+        mOccupied.clear();
+        Collections.sort(views, comparator);
+        for (int i = 0; i < childCount; i++) {
+            LayoutParams lp = (LayoutParams) views.get(i).getLayoutParams();
+            if (lp.cellX != i) {
+                lp.cellX = tempIndex;
+                tempIndex = i;
+                mShortcutsAndWidgets.setupLp(lp);
+            }
+            mOccupied.markCells(lp.cellX, 0, 1, 1, true);
+        }
+        mShortcutsAndWidgets.requestLayout();
+        views.clear();
     }
 
     @Override
     public void removeViewAt(int index) {
         markCellsAsUnoccupiedForView(mShortcutsAndWidgets.getChildAt(index));
         mShortcutsAndWidgets.removeViewAt(index);
+        if (isHotseat()) {
+            resetLayoutIndex();
+        }
     }
 
     @Override
     public void removeViewInLayout(View view) {
         markCellsAsUnoccupiedForView(view);
         mShortcutsAndWidgets.removeViewInLayout(view);
+        if (isHotseat()) {
+            resetLayoutIndex();
+        }
     }
 
     @Override
@@ -736,6 +773,9 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
             markCellsAsUnoccupiedForView(mShortcutsAndWidgets.getChildAt(i));
         }
         mShortcutsAndWidgets.removeViews(start, count);
+        if (isHotseat()) {
+            resetLayoutIndex();
+        }
     }
 
     @Override
@@ -744,6 +784,9 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
             markCellsAsUnoccupiedForView(mShortcutsAndWidgets.getChildAt(i));
         }
         mShortcutsAndWidgets.removeViewsInLayout(start, count);
+        if (isHotseat()) {
+            resetLayoutIndex();
+        }
     }
 
     /**
@@ -790,7 +833,6 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
     void cellToPoint(int cellX, int cellY, int[] result) {
         final int hStartPadding = getPaddingLeft();
         final int vStartPadding = getPaddingTop();
-
         result[0] = hStartPadding + cellX * (mCellWidth + mWidthGap);
         result[1] = vStartPadding + cellY * (mCellHeight + mHeightGap);
     }
@@ -948,6 +990,7 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
         mTouchFeedbackView.layout(left, top,
                 left + mTouchFeedbackView.getMeasuredWidth(),
                 top + mTouchFeedbackView.getMeasuredHeight());
+
         mShortcutsAndWidgets.layout(left, top, right, bottom);
 
         // Expand the background drawing bounds by the padding baked into the background drawable
@@ -1091,6 +1134,7 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
 
     void visualizeDropLocation(View v, DragPreviewProvider outlineProvider, int cellX, int cellY,
                                int spanX, int spanY, boolean resize, DropTarget.DragObject dragObject) {
+
         final int oldDragCellX = mDragCell[0];
         final int oldDragCellY = mDragCell[1];
 
@@ -1116,6 +1160,7 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
             } else {
                 // Find the top left corner of the rect the object will occupy
                 final int[] topLeft = mTmpPoint;
+
                 cellToPoint(cellX, cellY, topLeft);
 
                 int left = topLeft[0];
@@ -1139,17 +1184,27 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
                     if (dragOffset != null && dragRegion != null) {
                         // Center the drag region *horizontally* in the cell and apply a drag
                         // outline offset
-                        left += dragOffset.x + ((mCellWidth * spanX) + ((spanX - 1) * mWidthGap)
-                                - dragRegion.width()) / 2;
                         int cHeight = getShortcutsAndWidgets().getCellContentHeight();
                         int cellPaddingY = (int) Math.max(0, ((mCellHeight - cHeight) / 2f));
                         top += dragOffset.y + cellPaddingY;
+                        if (isHotseat()) {
+                            left = getLeftByCellX(cellX, getShortcutsAndWidgets().getCellContentWidth());
+                            top -= 15;
+                        } else {
+                            left += dragOffset.x + ((mCellWidth * spanX) + ((spanX - 1) * mWidthGap)
+                                    - dragRegion.width()) / 2;
+                        }
                     } else {
                         // Center the drag outline in the cell
-                        left += ((mCellWidth * spanX) + ((spanX - 1) * mWidthGap)
-                                - dragOutline.getWidth()) / 2;
                         top += ((mCellHeight * spanY) + ((spanY - 1) * mHeightGap)
                                 - dragOutline.getHeight()) / 2;
+                        if (isHotseat()) {
+                            left = getLeftByCellX(cellX, getShortcutsAndWidgets().getCellContentWidth());
+                            top -= 15;
+                        } else {
+                            left += ((mCellWidth * spanX) + ((spanX - 1) * mWidthGap)
+                                    - dragOutline.getWidth()) / 2;
+                        }
                     }
                 }
                 r.set(left, top, left + dragOutline.getWidth(), top + dragOutline.getHeight());
@@ -1171,6 +1226,265 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
                 dragObject.stateAnnouncer.announce(msg);
             }
         }
+    }
+
+    private int getLeftByCellX(int cellX, int cellContentWidth) {
+        int childCount = mShortcutsAndWidgets.getChildCount();
+        final int oddLeft = (getWidth()) / 2 - cellContentWidth / 2;
+        final int eventLeft = oddLeft - mCellWidth / 2;
+        switch (childCount) {
+            case 0:
+                return oddLeft;
+            case 1:
+                if (fromDesktop) {
+                    if (cellX == 0) {
+                        return eventLeft;
+                    } else {
+                        return eventLeft + mCellWidth;
+                    }
+                } else {
+                    return oddLeft;
+                }
+            case 2:
+                if (fromDesktop) {
+                    if (cellX == 0) {
+                        return oddLeft - mCellWidth;
+                    } else if (cellX == 1) {
+                        return oddLeft;
+                    } else {
+                        return oddLeft + mCellWidth;
+                    }
+                } else {
+                    if (cellX == 0) {
+                        return eventLeft;
+                    } else {
+                        return eventLeft + mCellWidth;
+                    }
+                }
+            case 3:
+                if (fromDesktop) {
+                    if (cellX == 0) {
+                        return eventLeft - mCellWidth;
+                    } else if (cellX == 1) {
+                        return eventLeft;
+                    } else {
+                        return eventLeft + mCellWidth;
+                    }
+                } else {
+                    if (cellX == 0) {
+                        return oddLeft - mCellWidth;
+                    } else if (cellX == 1) {
+                        return oddLeft;
+                    } else {
+                        return oddLeft + mCellWidth;
+                    }
+                }
+            case 4:
+                if (fromDesktop) {
+                    if (cellX == 0) {
+                        return oddLeft - mCellWidth * 2;
+                    } else if (cellX == 1) {
+                        return oddLeft - mCellWidth;
+                    } else if (cellX == 2) {
+                        return oddLeft;
+                    } else if (cellX == 3) {
+                        return oddLeft + mCellWidth;
+                    } else {
+                        return oddLeft + mCellWidth * 2;
+                    }
+                } else {
+                    if (cellX == 0) {
+                        return eventLeft - mCellWidth;
+                    } else if (cellX == 1) {
+                        return eventLeft;
+                    } else if (cellX == 2) {
+                        return eventLeft + mCellWidth;
+                    } else {
+                        return eventLeft + mCellWidth * 2;
+                    }
+                }
+            case 5:
+                if (fromDesktop) {
+                    if (cellX == 0) {
+                        return eventLeft - mCellWidth * 2;
+                    } else if (cellX == 1) {
+                        return eventLeft - mCellWidth;
+                    } else if (cellX == 2) {
+                        return eventLeft;
+                    } else if (cellX == 3) {
+                        return eventLeft + mCellWidth;
+                    } else if (cellX == 4) {
+                        return eventLeft + mCellWidth * 2;
+                    } else {
+                        return eventLeft + mCellWidth * 3;
+                    }
+                } else {
+                    if (cellX == 0) {
+                        return oddLeft - mCellWidth * 2;
+                    } else if (cellX == 1) {
+                        return oddLeft - mCellWidth;
+                    } else if (cellX == 2) {
+                        return oddLeft;
+                    } else if (cellX == 3) {
+                        return oddLeft + mCellWidth;
+                    } else {
+                        return oddLeft + mCellWidth * 2;
+                    }
+                }
+            case 6:
+                if (fromDesktop) {
+                    if (cellX == 0) {
+                        return oddLeft - mCellWidth * 3;
+                    } else if (cellX == 1) {
+                        return oddLeft - mCellWidth * 2;
+                    } else if (cellX == 2) {
+                        return oddLeft - mCellWidth;
+                    } else if (cellX == 3) {
+                        return oddLeft;
+                    } else if (cellX == 4) {
+                        return oddLeft + mCellWidth;
+                    } else if (cellX == 5) {
+                        return oddLeft + mCellWidth * 2;
+                    } else {
+                        return oddLeft + mCellWidth * 3;
+                    }
+                } else {
+                    if (cellX == 0) {
+                        return eventLeft - mCellWidth * 2;
+                    } else if (cellX == 1) {
+                        return eventLeft - mCellWidth;
+                    } else if (cellX == 2) {
+                        return eventLeft;
+                    } else if (cellX == 3) {
+                        return eventLeft + mCellWidth;
+                    } else if (cellX == 4) {
+                        return eventLeft + mCellWidth * 2;
+                    } else {
+                        return eventLeft + mCellWidth * 3;
+                    }
+                }
+            case 7:
+                if (fromDesktop) {
+                    if (cellX == 0) {
+                        return eventLeft - mCellWidth * 3;
+                    } else if (cellX == 1) {
+                        return eventLeft - mCellWidth * 2;
+                    } else if (cellX == 2) {
+                        return eventLeft - mCellWidth;
+                    } else if (cellX == 3) {
+                        return eventLeft;
+                    } else if (cellX == 4) {
+                        return eventLeft + mCellWidth;
+                    } else if (cellX == 5) {
+                        return eventLeft + mCellWidth * 2;
+                    } else if (cellX == 6) {
+                        return eventLeft + mCellWidth * 3;
+                    } else {
+                        return eventLeft + mCellWidth * 4;
+                    }
+                } else {
+                    if (cellX == 0) {
+                        return oddLeft - mCellWidth * 3;
+                    } else if (cellX == 1) {
+                        return oddLeft - mCellWidth * 2;
+                    } else if (cellX == 2) {
+                        return oddLeft - mCellWidth;
+                    } else if (cellX == 3) {
+                        return oddLeft;
+                    } else if (cellX == 4) {
+                        return oddLeft + mCellWidth;
+                    } else if (cellX == 5) {
+                        return oddLeft + mCellWidth * 2;
+                    } else {
+                        return oddLeft + mCellWidth * 3;
+                    }
+                }
+            case 8:
+                if (fromDesktop) {
+                    if (cellX == 0) {
+                        return oddLeft - mCellWidth * 4;
+                    } else if (cellX == 1) {
+                        return oddLeft - mCellWidth * 3;
+                    } else if (cellX == 2) {
+                        return oddLeft - mCellWidth * 2;
+                    } else if (cellX == 3) {
+                        return oddLeft - mCellWidth;
+                    } else if (cellX == 4) {
+                        return oddLeft;
+                    } else if (cellX == 5) {
+                        return oddLeft + mCellWidth;
+                    } else if (cellX == 6) {
+                        return oddLeft + mCellWidth * 2;
+                    } else if (cellX == 7) {
+                        return oddLeft + mCellWidth * 3;
+                    } else {
+                        return oddLeft + mCellWidth * 4;
+                    }
+                } else {
+                    if (cellX == 0) {
+                        return eventLeft - mCellWidth * 3;
+                    } else if (cellX == 1) {
+                        return eventLeft - mCellWidth * 2;
+                    } else if (cellX == 2) {
+                        return eventLeft - mCellWidth;
+                    } else if (cellX == 3) {
+                        return eventLeft;
+                    } else if (cellX == 4) {
+                        return eventLeft + mCellWidth;
+                    } else if (cellX == 5) {
+                        return eventLeft + mCellWidth * 2;
+                    } else if (cellX == 6) {
+                        return eventLeft + mCellWidth * 3;
+                    } else {
+                        return eventLeft + mCellWidth * 4;
+                    }
+                }
+            case 9:
+//                if (fromDesktop) {
+//                    if (cellX == 0) {
+//                        return eventLeft - mCellWidth * 4;
+//                    } else if (cellX == 1) {
+//                        return eventLeft - mCellWidth * 3;
+//                    } else if (cellX == 2) {
+//                        return eventLeft - mCellWidth * 2;
+//                    } else if (cellX == 3) {
+//                        return eventLeft - mCellWidth;
+//                    } else if (cellX == 4) {
+//                        return eventLeft;
+//                    } else if (cellX == 5) {
+//                        return eventLeft + mCellWidth;
+//                    } else if (cellX == 6) {
+//                        return eventLeft + mCellWidth * 2;
+//                    } else if (cellX == 7) {
+//                        return eventLeft + mCellWidth * 3;
+//                    } else if (cellX == 8) {
+//                        return eventLeft + mCellWidth * 4;
+//                    } else {
+//                        return eventLeft + mCellWidth * 5;
+//                    }
+//                } else {
+                if (cellX == 0) {
+                    return oddLeft - mCellWidth * 4;
+                } else if (cellX == 1) {
+                    return oddLeft - mCellWidth * 3;
+                } else if (cellX == 2) {
+                    return oddLeft - mCellWidth * 2;
+                } else if (cellX == 3) {
+                    return oddLeft - mCellWidth;
+                } else if (cellX == 4) {
+                    return oddLeft;
+                } else if (cellX == 5) {
+                    return oddLeft + mCellWidth;
+                } else if (cellX == 6) {
+                    return oddLeft + mCellWidth * 2;
+                } else if (cellX == 7) {
+                    return oddLeft + mCellWidth * 3;
+                } else {
+                    return oddLeft + mCellWidth * 4;
+                }
+//                }
+        }
+        return oddLeft;
     }
 
     public void clearDragOutlines() {
@@ -1196,6 +1510,10 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
      */
     int[] findNearestVacantArea(int pixelX, int pixelY, int minSpanX, int minSpanY, int spanX,
                                 int spanY, int[] result, int[] resultSpan, int itemType) {
+        if (isHotseat()) {
+            return findNearestAreaForHotseat(pixelX, pixelY, minSpanX, minSpanY, spanX, spanY, true,
+                    result, resultSpan);
+        }
         return findNearestArea(pixelX, pixelY, minSpanX, minSpanY, spanX, spanY, true,
                 result, resultSpan, itemType);
     }
@@ -1214,6 +1532,303 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
         while (!used.isEmpty()) {
             mTempRectStack.push(used.pop());
         }
+    }
+
+
+    private int[] findNearestAreaForHotseat(int pixelX, int pixelY, int minSpanX, int minSpanY, int spanX,
+                                            int spanY, boolean ignoreOccupied, int[] result, int[] resultSpan) {
+        int childCount = mShortcutsAndWidgets.getChildCount();
+        return getBestXY(childCount, pixelX);
+
+//        lazyInitTempRectStack();
+//
+//        // For items with a spanX / spanY > 1, the passed in point (pixelX, pixelY) corresponds
+//        // to the center of the item, but we are searching based on the top-left cell, so
+//        // we translate the point over to correspond to the top-left.
+//        pixelX -= (mCellWidth + mWidthGap) * (spanX - 1) / 2f;
+//        pixelY -= (mCellHeight + mHeightGap) * (spanY - 1) / 2f;
+//
+//        // Keep track of best-scoring drop area
+//        final int[] bestXY = result != null ? result : new int[2];
+//
+//        if (minSpanX <= 0 || minSpanY <= 0 || spanX <= 0 || spanY <= 0 ||
+//                spanX < minSpanX || spanY < minSpanY) {
+//            return bestXY;
+//        }
+//
+//        double bestDistance = Double.MAX_VALUE;
+//        final Rect bestRect = new Rect(-1, -1, -1, -1);
+//        final Stack<Rect> validRegions = new Stack<Rect>();
+//
+//        final int countX = mCountX;
+//        final int countY = mCountY;
+//
+//        for (int y = 0; y < countY - (minSpanY - 1); y++) {
+//            inner:
+//            for (int x = 0; x < countX - (minSpanX - 1); x++) {
+//                int ySize = -1;
+//                int xSize = -1;
+//                if (ignoreOccupied) {
+//                    // First, let's see if this thing fits anywhere
+//                    for (int i = 0; i < minSpanX; i++) {
+//                        for (int j = 0; j < minSpanY; j++) {
+//                            if (mOccupied.cells[x + i][y + j]) {
+//                                continue inner;
+//                            }
+//                        }
+//                    }
+//                    xSize = minSpanX;
+//                    ySize = minSpanY;
+//
+//                    // We know that the item will fit at _some_ acceptable size, now let's see
+//                    // how big we can make it. We'll alternate between incrementing x and y spans
+//                    // until we hit a limit.
+//                    boolean incX = true;
+//                    boolean hitMaxX = xSize >= spanX;
+//                    boolean hitMaxY = ySize >= spanY;
+//                    while (!(hitMaxX && hitMaxY)) {
+//                        if (incX && !hitMaxX) {
+//                            for (int j = 0; j < ySize; j++) {
+//                                if (x + xSize > countX - 1 || mOccupied.cells[x + xSize][y + j]) {
+//                                    // We can't move out horizontally
+//                                    hitMaxX = true;
+//                                }
+//                            }
+//                            if (!hitMaxX) {
+//                                xSize++;
+//                            }
+//                        } else if (!hitMaxY) {
+//                            for (int i = 0; i < xSize; i++) {
+//                                if (y + ySize > countY - 1 || mOccupied.cells[x + i][y + ySize]) {
+//                                    // We can't move out vertically
+//                                    hitMaxY = true;
+//                                }
+//                            }
+//                            if (!hitMaxY) {
+//                                ySize++;
+//                            }
+//                        }
+//                        hitMaxX |= xSize >= spanX;
+//                        hitMaxY |= ySize >= spanY;
+//                        incX = !incX;
+//                    }
+//                }
+//                final int[] cellXY = mTmpPoint;
+//                cellToCenterPoint(x, y, cellXY);
+//
+//                // We verify that the current rect is not a sub-rect of any of our previous
+//                // candidates. In this case, the current rect is disqualified in favour of the
+//                // containing rect.
+//                lazyInitTempRectStack();
+//                Rect currentRect = mTempRectStack.pop();
+//                currentRect.set(x, y, x + xSize, y + ySize);
+//                boolean contained = false;
+//                for (Rect r : validRegions) {
+//                    if (r.contains(currentRect)) {
+//                        contained = true;
+//                        break;
+//                    }
+//                }
+//                validRegions.push(currentRect);
+//                double distance = Math.hypot(cellXY[0] - pixelX, cellXY[1] - pixelY);
+//
+//                if ((distance <= bestDistance && !contained) ||
+//                        currentRect.contains(bestRect)) {
+//                    bestDistance = distance;
+//                    bestXY[0] = x;
+//                    bestXY[1] = y;
+//                    if (resultSpan != null) {
+//                        resultSpan[0] = xSize;
+//                        resultSpan[1] = ySize;
+//                    }
+//                    bestRect.set(currentRect);
+//                }
+//            }
+//        }
+//
+//        // Return -1, -1 if no suitable location found
+//        if (bestDistance == Double.MAX_VALUE) {
+//            bestXY[0] = -1;
+//            bestXY[1] = -1;
+//        }
+//
+//        recycleTempRects(validRegions);
+//        int[] x1 = convertBestXY(bestXY);
+//        if (x1 != null) return x1;
+//        return bestXY;
+    }
+
+    private int[] getBestXY(int childCount, int pixelX) {
+        final int maxColCount = 9;
+        int startX = (maxColCount - childCount) * mCellWidth / 2;
+        if (fromDesktop && childCount < maxColCount) {
+            return new int[]{0, 0};
+        }
+        switch (childCount) {
+            case 0:
+                return new int[]{0, 0};
+            case 1:
+                return new int[]{0, 0};
+            case 2:
+                if (pixelX <= startX + mCellWidth) {
+                    return new int[]{0, 0};
+                } else {
+                    return new int[]{1, 0};
+                }
+            case 3:
+                if (pixelX <= startX + mCellWidth) {
+                    return new int[]{0, 0};
+                }
+                if (pixelX > startX + mCellWidth && pixelX <= startX + mCellWidth * 2) {
+                    return new int[]{1, 0};
+                } else {
+                    return new int[]{2, 0};
+                }
+            case 4:
+                if (pixelX <= startX + mCellWidth) {
+                    return new int[]{0, 0};
+                }
+                if (pixelX > startX + mCellWidth && pixelX <= startX + mCellWidth * 2) {
+                    return new int[]{1, 0};
+                }
+                if (pixelX > startX + mCellWidth * 2 && pixelX <= startX + mCellWidth * 3) {
+                    return new int[]{2, 0};
+                } else {
+                    return new int[]{3, 0};
+                }
+            case 5:
+                if (pixelX <= startX + mCellWidth) {
+                    return new int[]{0, 0};
+                }
+                if (pixelX > startX + mCellWidth && pixelX <= startX + mCellWidth * 2) {
+                    return new int[]{1, 0};
+                }
+                if (pixelX > startX + mCellWidth * 2 && pixelX <= startX + mCellWidth * 3) {
+                    return new int[]{2, 0};
+                }
+                if (pixelX > startX + mCellWidth * 3 && pixelX < startX + mCellWidth * 4) {
+                    return new int[]{3, 0};
+                } else {
+                    return new int[]{4, 0};
+                }
+            case 6:
+                if (pixelX <= startX + mCellWidth) {
+                    return new int[]{0, 0};
+                }
+                if (pixelX > startX + mCellWidth && pixelX <= startX + mCellWidth * 2) {
+                    return new int[]{1, 0};
+                }
+                if (pixelX > startX + mCellWidth * 2 && pixelX <= startX + mCellWidth * 3) {
+                    return new int[]{2, 0};
+                }
+                if (pixelX > startX + mCellWidth * 3 && pixelX < startX + mCellWidth * 4) {
+                    return new int[]{3, 0};
+                }
+                if (pixelX > startX + mCellWidth * 4 && pixelX < startX + mCellWidth * 5) {
+                    return new int[]{4, 0};
+                } else {
+                    return new int[]{5, 0};
+                }
+            case 7:
+                if (pixelX <= startX + mCellWidth) {
+                    return new int[]{0, 0};
+                }
+                if (pixelX > startX + mCellWidth && pixelX <= startX + mCellWidth * 2) {
+                    return new int[]{1, 0};
+                }
+                if (pixelX > startX + mCellWidth * 2 && pixelX <= startX + mCellWidth * 3) {
+                    return new int[]{2, 0};
+                }
+                if (pixelX > startX + mCellWidth * 3 && pixelX < startX + mCellWidth * 4) {
+                    return new int[]{3, 0};
+                }
+                if (pixelX > startX + mCellWidth * 4 && pixelX < startX + mCellWidth * 5) {
+                    return new int[]{4, 0};
+                }
+                if (pixelX > startX + mCellWidth * 5 && pixelX < startX + mCellWidth * 6) {
+                    return new int[]{5, 0};
+                } else {
+                    return new int[]{6, 0};
+                }
+            case 8:
+                if (pixelX <= startX + mCellWidth) {
+                    return new int[]{0, 0};
+                }
+                if (pixelX > startX + mCellWidth && pixelX <= startX + mCellWidth * 2) {
+                    return new int[]{1, 0};
+                }
+                if (pixelX > startX + mCellWidth * 2 && pixelX <= startX + mCellWidth * 3) {
+                    return new int[]{2, 0};
+                }
+                if (pixelX > startX + mCellWidth * 3 && pixelX < startX + mCellWidth * 4) {
+                    return new int[]{3, 0};
+                }
+                if (pixelX > startX + mCellWidth * 4 && pixelX < startX + mCellWidth * 5) {
+                    return new int[]{4, 0};
+                }
+                if (pixelX > startX + mCellWidth * 5 && pixelX < startX + mCellWidth * 6) {
+                    return new int[]{5, 0};
+                }
+                if (pixelX > startX + mCellWidth * 6 && pixelX < startX + mCellWidth * 7) {
+                    return new int[]{6, 0};
+                } else {
+                    return new int[]{7, 0};
+                }
+            case 9:
+                if (pixelX <= startX + mCellWidth) {
+                    return new int[]{0, 0};
+                }
+                if (pixelX > startX + mCellWidth && pixelX <= startX + mCellWidth * 2) {
+                    return new int[]{1, 0};
+                }
+                if (pixelX > startX + mCellWidth * 2 && pixelX <= startX + mCellWidth * 3) {
+                    return new int[]{2, 0};
+                }
+                if (pixelX > startX + mCellWidth * 3 && pixelX < startX + mCellWidth * 4) {
+                    return new int[]{3, 0};
+                }
+                if (pixelX > startX + mCellWidth * 4 && pixelX < startX + mCellWidth * 5) {
+                    return new int[]{4, 0};
+                }
+                if (pixelX > startX + mCellWidth * 5 && pixelX < startX + mCellWidth * 6) {
+                    return new int[]{5, 0};
+                }
+                if (pixelX > startX + mCellWidth * 6 && pixelX < startX + mCellWidth * 7) {
+                    return new int[]{6, 0};
+                }
+                if (pixelX > startX + mCellWidth * 7 && pixelX < startX + mCellWidth * 8) {
+                    return new int[]{7, 0};
+                } else {
+                    return new int[]{8, 0};
+                }
+        }
+        return new int[]{-1, -1};
+    }
+
+    private int[] convertBestXY(int[] bestXY) {
+        if (mOccupied.cells[bestXY[0]][bestXY[1]]) {
+            return bestXY;
+        }
+        int x = bestXY[0];
+        int y = bestXY[1];
+        if (x < mCountX / 2 + 1) {
+            for (int i = mCountX / 2; i >= 0; i--) {
+                if (!mOccupied.cells[i][y]) {
+                    bestXY[0] = i;
+                    break;
+                }
+            }
+        } else if (x > mCountX / 2 - 1) {
+            for (int i = mCountX / 2; i < mCountX; i++) {
+                if (!mOccupied.cells[i][y]) {
+                    bestXY[0] = i;
+                    break;
+                }
+            }
+        } else if (x == mCountX / 2) {
+            return bestXY;
+        }
+        return null;
     }
 
     /**
@@ -1244,6 +1859,12 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
 
         // Keep track of best-scoring drop area
         final int[] bestXY = result != null ? result : new int[2];
+
+        if (minSpanX <= 0 || minSpanY <= 0 || spanX <= 0 || spanY <= 0 ||
+                spanX < minSpanX || spanY < minSpanY) {
+            return bestXY;
+        }
+
         double bestDistance = Double.MAX_VALUE;
         final Rect bestRect = new Rect(-1, -1, -1, -1);
         final Stack<Rect> validRegions = new Stack<Rect>();
@@ -1251,26 +1872,16 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
         final int countX = mCountX;
         int startY;
         int countY;
-
-        if (isHotseat()) {
+        if (itemType == LauncherSettings.Favorites.ITEM_TYPE_APPWIDGET
+                || itemType == LauncherSettings.Favorites.ITEM_TYPE_CUSTOM_APPWIDGET
+                || itemType == Favorites.ITEM_TYPE_SHORTCUT) {
+            //appWidget
             startY = 0;
-            countY = mCountY;
+            countY = mCountY - 2;
         } else {
-            if (itemType == LauncherSettings.Favorites.ITEM_TYPE_APPWIDGET
-                    || itemType == LauncherSettings.Favorites.ITEM_TYPE_CUSTOM_APPWIDGET
-                    || itemType == Favorites.ITEM_TYPE_SHORTCUT) {
-                //小控件
-                startY = 0;
-                countY = mCountY - 2;
-            } else {
-                startY = mCountY - 2;
-                countY = mCountY;
-            }
-        }
-
-        if (minSpanX <= 0 || minSpanY <= 0 || spanX <= 0 || spanY <= 0 ||
-                spanX < minSpanX || spanY < minSpanY) {
-            return bestXY;
+            //shortcut
+            startY = mCountY - 2;
+            countY = mCountY;
         }
 
         for (int y = startY; y < countY - (minSpanY - 1); y++) {
@@ -1322,9 +1933,6 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
                         hitMaxY |= ySize >= spanY;
                         incX = !incX;
                     }
-                    incX = true;
-                    hitMaxX = xSize >= spanX;
-                    hitMaxY = ySize >= spanY;
                 }
                 final int[] cellXY = mTmpPoint;
                 cellToCenterPoint(x, y, cellXY);
@@ -1364,6 +1972,7 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
             bestXY[0] = -1;
             bestXY[1] = -1;
         }
+
         recycleTempRects(validRegions);
         return bestXY;
     }
@@ -1405,7 +2014,7 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
             if (itemType == LauncherSettings.Favorites.ITEM_TYPE_APPWIDGET
                     || itemType == LauncherSettings.Favorites.ITEM_TYPE_CUSTOM_APPWIDGET
                     || itemType == Favorites.ITEM_TYPE_SHORTCUT) {
-                //小控件
+                //appWidget
                 startY = 0;
                 endY = mCountY - 2;
             } else {
@@ -1449,6 +2058,11 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
             bestXY[0] = -1;
             bestXY[1] = -1;
         }
+
+//        if (isHotseat()) {
+//            int[] x1 = convertBestXY(bestXY);
+//            if (x1 != null) return x1;
+//        }
         return bestXY;
     }
 
@@ -1667,6 +2281,7 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
         int pushDistance;
         boolean fail = false;
 
+
         // Determine the edge of the cluster that will be leading the push and how far
         // the cluster must be shifted.
         if (direction[0] < 0) {
@@ -1682,6 +2297,7 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
             whichEdge = ViewCluster.BOTTOM;
             pushDistance = rectOccupiedByPotentialDrop.bottom - clusterRect.top;
         }
+
 
         // Break early for invalid push distance.
         if (pushDistance <= 0) {
@@ -1744,7 +2360,6 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
             if (itemType == LauncherSettings.Favorites.ITEM_TYPE_APPWIDGET
                     || itemType == LauncherSettings.Favorites.ITEM_TYPE_CUSTOM_APPWIDGET
                     || itemType == Favorites.ITEM_TYPE_SHORTCUT) {
-                //小控件
                 startY = 0;
                 endY = mCountY - 2;
             } else {
@@ -1767,6 +2382,7 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
             CellAndSpan c = currentState.map.get(v);
             mTmpOccupied.markCells(c, true);
         }
+
 
         return foundSolution;
     }
@@ -2446,6 +3062,7 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
     int[] performReorder(int pixelX, int pixelY, int minSpanX, int minSpanY, int spanX, int spanY,
                          View dragView, int[] result, int resultSpan[], int mode, int itemType) {
         // First we determine if things have moved enough to cause a different layout
+
         result = findNearestArea(pixelX, pixelY, spanX, spanY, result, itemType);
 
         if (resultSpan == null) {
@@ -2612,7 +3229,16 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
      * nearest the requested location.
      */
     public int[] findNearestArea(int pixelX, int pixelY, int spanX, int spanY, int[] result, int itemType) {
+        if (isHotseat()) {
+            return findNearestAreaForHotseat(pixelX, pixelY, spanX, spanY, spanX, spanY, false, result, null);
+        }
         return findNearestArea(pixelX, pixelY, spanX, spanY, spanX, spanY, false, result, null, itemType);
+    }
+
+    private boolean fromDesktop = false;
+
+    public void setIsFromDesktop(boolean fromDesktop) {
+        this.fromDesktop = fromDesktop;
     }
 
     boolean existsEmptyCell(int itemType) {
@@ -2645,13 +3271,13 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
      */
     void onDragEnter() {
         mDragging = true;
-        invalidate();
     }
 
     /**
      * Called when drag has left this CellLayout or has been completed (successfully or not)
      */
     void onDragExit() {
+
         // This can actually be called when we aren't in a drag, e.g. when adding a new
         // item to this layout via the customize drawer.
         // Guard against that case.
@@ -2677,11 +3303,39 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
     void onDropChild(View child) {
         if (child != null) {
             LayoutParams lp = (LayoutParams) child.getLayoutParams();
+//            if(isHotseat()){
+//                mShortcutsAndWidgets.setupLp(lp);
+//            }
             lp.dropped = true;
             child.requestLayout();
             markCellsAsOccupiedForView(child);
+//            if(isHotseat()){
+//                reOrderChild();
+//            }
         }
     }
+
+    private void reOrderChild() {
+        int childCount = mShortcutsAndWidgets.getChildCount();
+        if (childCount == 0) return;
+        int tempIndex = 0;
+        ArrayList<View> views = new ArrayList<>();
+        for (int i = 0; i < childCount; i++) {
+            views.add(mShortcutsAndWidgets.getChildAt(i));
+        }
+        mOccupied.clear();
+        Collections.sort(views, comparator);
+        for (int i = 0; i < childCount; i++) {
+            LayoutParams lp = (LayoutParams) views.get(i).getLayoutParams();
+            lp.cellX = tempIndex;
+            mShortcutsAndWidgets.setupLp(lp);
+            mOccupied.markCells(lp.cellX, 0, 1, 1, true);
+            tempIndex++;
+        }
+        mShortcutsAndWidgets.requestLayout();
+        views.clear();
+    }
+
 
     /**
      * Computes a bounding rectangle for a range of cells
@@ -2869,6 +3523,34 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
                 y = myCellY * (cellHeight + heightGap) + topMargin;
             }
         }
+
+        public void setupForHotSeat(int cellWidth, int cellHeight, int widthGap, int heightGap,
+                                    boolean invertHorizontally, int colCount) {
+
+            if (colCount == 1) {
+                cellX = 0;
+            }
+
+            if (isLockedToGrid) {
+                final int myCellHSpan = cellHSpan;
+                final int myCellVSpan = cellVSpan;
+                int myCellX = useTmpCoords ? tmpCellX : cellX;
+
+                if (invertHorizontally) {
+                    myCellX = colCount - myCellX - cellHSpan;
+                }
+
+                width = myCellHSpan * cellWidth + ((myCellHSpan - 1) * widthGap) -
+                        leftMargin - rightMargin;
+                height = myCellVSpan * cellHeight + ((myCellVSpan - 1) * heightGap) -
+                        topMargin - bottomMargin + 30;
+                final int maxColCount = 9;
+                int startX = (maxColCount - colCount) * width / 2;
+                x = startX + myCellX * (cellWidth + widthGap) + leftMargin;
+                y = -30;
+            }
+        }
+
 
         public String toString() {
             return "(" + this.cellX + ", " + this.cellY + ")";

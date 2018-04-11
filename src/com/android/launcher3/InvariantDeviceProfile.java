@@ -141,8 +141,8 @@ public class InvariantDeviceProfile {
 
         InvariantDeviceProfile closestProfile = closestProfiles.get(0);
         numRows = 4;
-        numColumns = 11;      //主屏数目
-        numHotseatIcons = 11; //底座数目
+        numColumns = 9;
+        numHotseatIcons = 9;
         defaultLayoutId = closestProfile.defaultLayoutId;
         numFolderRows = closestProfile.numFolderRows;
         numFolderColumns = closestProfile.numFolderColumns;
@@ -150,6 +150,7 @@ public class InvariantDeviceProfile {
 
         iconSize = interpolatedDeviceProfileOut.iconSize;
         iconBitmapSize = Utilities.pxFromDp(iconSize, dm);
+        iconBitmapSize = 100;
         iconTextSize = interpolatedDeviceProfileOut.iconTextSize;
         hotseatIconSize = iconSize; // modify
         fillResIconDpi = getLauncherIconDensity(iconBitmapSize);
@@ -165,7 +166,7 @@ public class InvariantDeviceProfile {
         int smallSide = Math.min(realSize.x, realSize.y);
         int largeSide = Math.max(realSize.x, realSize.y);
 
-        //横屏
+        //modify
         landscapeProfile = new DeviceProfile(context, this, smallestSize, largestSize,
                 largeSide, smallSide, true /* isLandscape */);
         portraitProfile = new DeviceProfile(context, this, smallestSize, largestSize,

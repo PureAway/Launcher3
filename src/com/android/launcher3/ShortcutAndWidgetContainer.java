@@ -23,6 +23,8 @@ import android.graphics.Rect;
 import android.view.View;
 import android.view.ViewGroup;
 
+import java.util.Comparator;
+
 public class ShortcutAndWidgetContainer extends ViewGroup {
     static final String TAG = "CellLayoutChildren";
 
@@ -53,7 +55,7 @@ public class ShortcutAndWidgetContainer extends ViewGroup {
     }
 
     public void setCellDimensions(int cellWidth, int cellHeight, int widthGap, int heightGap,
-            int countX, int countY) {
+                                  int countX, int countY) {
         mCellWidth = cellWidth;
         mCellHeight = cellHeight;
         mWidthGap = widthGap;
@@ -78,9 +80,8 @@ public class ShortcutAndWidgetContainer extends ViewGroup {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         int count = getChildCount();
-
         int widthSpecSize = MeasureSpec.getSize(widthMeasureSpec);
-        int heightSpecSize =  MeasureSpec.getSize(heightMeasureSpec);
+        int heightSpecSize = MeasureSpec.getSize(heightMeasureSpec);
         setMeasuredDimension(widthSpecSize, heightSpecSize);
 
         for (int i = 0; i < count; i++) {
@@ -91,7 +92,13 @@ public class ShortcutAndWidgetContainer extends ViewGroup {
         }
     }
 
+
     public void setupLp(CellLayout.LayoutParams lp) {
+        if (mIsHotseatLayout) {
+            lp.setupForHotSeat(mCellWidth, mCellHeight, mWidthGap, mHeightGap, invertLayoutHorizontally(),
+                    getChildCount());
+            return;
+        }
         lp.setup(mCellWidth, mCellHeight, mWidthGap, mHeightGap, invertLayoutHorizontally(),
                 mCountX);
     }
@@ -107,8 +114,8 @@ public class ShortcutAndWidgetContainer extends ViewGroup {
 
     int getCellContentWidth() {
         final DeviceProfile grid = mLauncher.getDeviceProfile();
-        return Math.min(getMeasuredHeight(), mIsHotseatLayout ?
-                grid.hotseatCellWidthPx: grid.cellWidthPx);
+        return Math.min(getMeasuredWidth(), mIsHotseatLayout ?
+                grid.hotseatCellWidthPx : grid.cellWidthPx);
     }
 
     int getCellContentHeight() {
@@ -123,8 +130,13 @@ public class ShortcutAndWidgetContainer extends ViewGroup {
         final int cellHeight = mCellHeight;
         CellLayout.LayoutParams lp = (CellLayout.LayoutParams) child.getLayoutParams();
         if (!lp.isFullscreen) {
-            lp.setup(cellWidth, cellHeight, mWidthGap, mHeightGap, invertLayoutHorizontally(),
-                    mCountX);
+            if (mIsHotseatLayout) {
+                lp.setupForHotSeat(mCellWidth, mCellHeight, mWidthGap, mHeightGap, invertLayoutHorizontally(),
+                        getChildCount());
+            } else {
+                lp.setup(cellWidth, cellHeight, mWidthGap, mHeightGap, invertLayoutHorizontally(),
+                        mCountX);
+            }
 
             if (child instanceof LauncherAppWidgetHostView) {
                 // Widgets have their own padding, so skip
@@ -150,8 +162,47 @@ public class ShortcutAndWidgetContainer extends ViewGroup {
         return mInvertIfRtl && Utilities.isRtl(getResources());
     }
 
+    private Comparator<View> comparator = new Comparator<View>() {
+        @Override
+        public int compare(View o1, View o2) {
+            return ((CellLayout.LayoutParams) o1.getLayoutParams()).x - ((CellLayout.LayoutParams) o2.getLayoutParams()).x;
+        }
+    };
+
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
+//        if (mIsHotseatLayout) {
+//            int count = getChildCount();
+//            if (count == 0) return;
+//            ArrayList<View> views = new ArrayList<>();
+//            int spanX = (r - l) / mCountX;
+//            int left = (r - l) / 2 - (count * spanX) / 2;
+//            for (int i = 0; i < count; i++) {
+//                views.add(getChildAt(i));
+//            }
+//            Collections.sort(views, comparator);
+//            for (int i = 0; i < views.size(); i++) {
+//
+//                final View child = views.get(i);
+//                if (child.getVisibility() != GONE) {
+//                    CellLayout.LayoutParams lp = (CellLayout.LayoutParams) child.getLayoutParams();
+//                    int childLeft = lp.x;
+//                    int childTop = lp.y;
+//                    child.layout(left, childTop, left + spanX, childTop + lp.height);
+//                    left += spanX;
+//                    if (lp.dropped) {
+//                        lp.dropped = false;
+//
+//                        final int[] cellXY = mTmpCellXY;
+//                        getLocationOnScreen(cellXY);
+//                        mWallpaperManager.sendWallpaperCommand(getWindowToken(),
+//                                WallpaperManager.COMMAND_DROP,
+//                                cellXY[0] + childLeft + lp.width / 2,
+//                                cellXY[1] + childTop + lp.height / 2, 0, null);
+//                    }
+//                }
+//            }
+//        } else {
         int count = getChildCount();
         for (int i = 0; i < count; i++) {
             final View child = getChildAt(i);
@@ -173,6 +224,7 @@ public class ShortcutAndWidgetContainer extends ViewGroup {
                 }
             }
         }
+//        }
     }
 
     @Override
