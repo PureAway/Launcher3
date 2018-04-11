@@ -729,7 +729,8 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
         if (childCount == 0) {
             return;
         }
-        int tempIndex = 0;
+        long screenId = -1;
+        int container = Favorites.CONTAINER_HOTSEAT;
         ArrayList<View> views = new ArrayList<>();
         for (int i = 0; i < childCount; i++) {
             views.add(mShortcutsAndWidgets.getChildAt(i));
@@ -738,12 +739,14 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
         Collections.sort(views, comparator);
         for (int i = 0; i < childCount; i++) {
             LayoutParams lp = (LayoutParams) views.get(i).getLayoutParams();
-            if (lp.cellX != i) {
-                lp.cellX = tempIndex;
-                tempIndex = i;
-                mShortcutsAndWidgets.setupLp(lp);
-            }
+            lp.cellX = i;
+            mShortcutsAndWidgets.setupLp(lp);
             mOccupied.markCells(lp.cellX, 0, 1, 1, true);
+            ItemInfo info = (ItemInfo) views.get(i).getTag();
+            if (null != info && (info.cellX != lp.cellX)) {
+                LauncherModel.modifyItemInDatabase(mLauncher, info, container, screenId,
+                        lp.cellX, lp.cellY, 1, 1);
+            }
         }
         mShortcutsAndWidgets.requestLayout();
         views.clear();
@@ -3241,6 +3244,10 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
         this.fromDesktop = fromDesktop;
     }
 
+    public boolean isFromDesktop() {
+        return fromDesktop;
+    }
+
     boolean existsEmptyCell(int itemType) {
         return findCellForSpan(null, 1, 1, itemType);
     }
@@ -3303,37 +3310,14 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
     void onDropChild(View child) {
         if (child != null) {
             LayoutParams lp = (LayoutParams) child.getLayoutParams();
-//            if(isHotseat()){
-//                mShortcutsAndWidgets.setupLp(lp);
-//            }
             lp.dropped = true;
+            if (isHotseat()) {
+                resetLayoutIndex();
+                return;
+            }
             child.requestLayout();
             markCellsAsOccupiedForView(child);
-//            if(isHotseat()){
-//                reOrderChild();
-//            }
         }
-    }
-
-    private void reOrderChild() {
-        int childCount = mShortcutsAndWidgets.getChildCount();
-        if (childCount == 0) return;
-        int tempIndex = 0;
-        ArrayList<View> views = new ArrayList<>();
-        for (int i = 0; i < childCount; i++) {
-            views.add(mShortcutsAndWidgets.getChildAt(i));
-        }
-        mOccupied.clear();
-        Collections.sort(views, comparator);
-        for (int i = 0; i < childCount; i++) {
-            LayoutParams lp = (LayoutParams) views.get(i).getLayoutParams();
-            lp.cellX = tempIndex;
-            mShortcutsAndWidgets.setupLp(lp);
-            mOccupied.markCells(lp.cellX, 0, 1, 1, true);
-            tempIndex++;
-        }
-        mShortcutsAndWidgets.requestLayout();
-        views.clear();
     }
 
 

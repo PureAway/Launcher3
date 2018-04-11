@@ -2708,7 +2708,8 @@ public class Workspace extends PagedView
                 boolean foundCell = mTargetCell[0] >= 0 && mTargetCell[1] >= 0;
 
                 boolean isHotseat = dropTargetLayout.isHotseat();
-                if (isHotseat && dropTargetLayout.getShortcutsAndWidgets().getChildCount() == 9) {
+                if (isHotseat && dropTargetLayout.getShortcutsAndWidgets().getChildCount() == 9
+                        && mLauncher.getHotseat().getLayout().isFromDesktop()) {
                     foundCell = false;
                 }
 
@@ -2811,6 +2812,13 @@ public class Workspace extends PagedView
             } else {
                 d.deferDragViewCleanupPostAnimation = false;
                 cell.setVisibility(VISIBLE);
+            }
+            // modify
+            if (dropTargetLayout.isHotseat()
+                    && dropTargetLayout.getShortcutsAndWidgets().getChildCount() == 9
+                    && cell != null) {
+                CellLayout.LayoutParams lp = (CellLayout.LayoutParams) cell.getLayoutParams();
+                lp.cellX = mTargetCell[0];
             }
             parent.onDropChild(cell);
         }
