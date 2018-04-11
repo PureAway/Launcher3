@@ -2313,7 +2313,9 @@ public class Workspace extends PagedView
         child.setVisibility(INVISIBLE);
         CellLayout layout = (CellLayout) child.getParent().getParent();
 
-        mLauncher.getHotseat().getLayout().setIsFromDesktop(!(mLauncher.getHotseat().getLayout() == layout));
+        isFromDesktop = !(mLauncher.getHotseat().getLayout() == layout);
+
+        mLauncher.getHotseat().getLayout().setIsFromDesktop(isFromDesktop);
 
         layout.prepareChildForDrag(child);
 
@@ -2709,7 +2711,7 @@ public class Workspace extends PagedView
 
                 boolean isHotseat = dropTargetLayout.isHotseat();
                 if (isHotseat && dropTargetLayout.getShortcutsAndWidgets().getChildCount() == 9
-                        && mLauncher.getHotseat().getLayout().isFromDesktop()) {
+                        && isFromDesktop) {
                     foundCell = false;
                 }
 
@@ -2866,12 +2868,11 @@ public class Workspace extends PagedView
         }
     }
 
+
+    private boolean isFromDesktop = false;
+
     @Override
     public void onDragExit(DragObject d) {
-
-        itemType = -1;
-
-        mLauncher.getHotseat().getLayout().setIsFromDesktop(false);
 
         if (ENFORCE_DRAG_EVENT_ORDER) {
             enfoceDragParity("onDragExit", -1, 0);
@@ -3723,6 +3724,13 @@ public class Workspace extends PagedView
      */
     public void onDropCompleted(final View target, final DragObject d,
                                 final boolean isFlingToDelete, final boolean success) {
+        itemType = -1;
+
+        isFromDesktop = false;
+
+        mLauncher.getHotseat().getLayout().setIsFromDesktop(isFromDesktop);
+
+
         if (mDeferDropAfterUninstall) {
             mDeferredAction = new Runnable() {
                 public void run() {

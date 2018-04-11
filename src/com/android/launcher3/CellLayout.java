@@ -3244,10 +3244,6 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
         this.fromDesktop = fromDesktop;
     }
 
-    public boolean isFromDesktop() {
-        return fromDesktop;
-    }
-
     boolean existsEmptyCell(int itemType) {
         return findCellForSpan(null, 1, 1, itemType);
     }
