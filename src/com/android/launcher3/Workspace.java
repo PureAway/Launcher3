@@ -2640,9 +2640,11 @@ public class Workspace extends PagedView
     }
 
     public void onDrop(final DragObject d) {
+
+        boolean dropToDeskTop = false;
+
         mDragViewVisualCenter = d.getVisualCenter(mDragViewVisualCenter);
         CellLayout dropTargetLayout = mDropToLayout;
-
 
         // We want the point to be mapped to the dragTarget.
         if (dropTargetLayout != null) {
@@ -2714,6 +2716,8 @@ public class Workspace extends PagedView
                         && isFromDesktop) {
                     foundCell = false;
                 }
+
+                dropToDeskTop = !foundCell && isHotseat;
 
                 // if the widget resizes on drop
                 if (foundCell && (cell instanceof AppWidgetHostView) &&
@@ -2808,7 +2812,8 @@ public class Workspace extends PagedView
                             onCompleteRunnable, animationType, cell, false);
                 } else {
                     int duration = snapScreen < 0 ? -1 : ADJACENT_SCREEN_DROP_DURATION;
-                    if (isFromDesktop && mLauncher.isHotseatLayout(dropTargetLayout)) {
+                    if (isFromDesktop && mLauncher.isHotseatLayout(dropTargetLayout) && !dropToDeskTop
+                            && mLauncher.getHotseat().getLayout().getShortcutsAndWidgets().getChildCount() != 9) {
                         mLauncher.getDragLayer().animateViewIntoPosition(d.dragView, cell, duration,
                                 onCompleteRunnable, this, true);
                     } else {
@@ -3722,12 +3727,12 @@ public class Workspace extends PagedView
      */
     public void onDropCompleted(final View target, final DragObject d,
                                 final boolean isFlingToDelete, final boolean success) {
+
         itemType = -1;
 
         isFromDesktop = false;
 
         mLauncher.getHotseat().getLayout().setIsFromDesktop(isFromDesktop);
-
 
         if (mDeferDropAfterUninstall) {
             mDeferredAction = new Runnable() {

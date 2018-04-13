@@ -3401,7 +3401,9 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
 
     public void setIsFromDesktop(boolean fromDesktop) {
         this.fromDesktop = fromDesktop;
-        mShortcutsAndWidgets.setIsFromDesktop(fromDesktop);
+        if (isHotseat()) {
+            mShortcutsAndWidgets.setIsFromDesktop(fromDesktop);
+        }
     }
 
     boolean existsEmptyCell(int itemType) {
@@ -3664,7 +3666,9 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
         public void setupForHotSeat(int cellWidth, int cellHeight, int widthGap, int heightGap,
                                     boolean invertHorizontally, int colCount, boolean fromDesktop) {
 
-            if (fromDesktop) {
+            final int maxColCount = 9;
+
+            if (fromDesktop && colCount < maxColCount) {
                 colCount++;
             }
 
@@ -3681,7 +3685,6 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
                         leftMargin - rightMargin;
                 height = myCellVSpan * cellHeight + ((myCellVSpan - 1) * heightGap) -
                         topMargin - bottomMargin + 30;
-                final int maxColCount = 9;
                 int startX = (maxColCount - colCount) * width / 2;
                 x = startX + myCellX * (cellWidth + widthGap) + leftMargin;
                 y = -30;
