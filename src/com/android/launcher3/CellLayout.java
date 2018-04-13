@@ -67,13 +67,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Stack;
 
-import static android.R.attr.bottom;
-import static android.R.attr.end;
-import static android.R.attr.start;
-import static android.R.attr.startX;
-import static android.R.attr.startY;
-import static android.R.attr.top;
-import static android.R.attr.width;
 
 public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
     public static final int WORKSPACE_ACCESSIBILITY_DRAG = 2;
@@ -724,7 +717,8 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
         }
     };
 
-    private void resetLayoutIndex() {
+    public void resetLayoutIndex() {
+        mShortcutsAndWidgets.setIsFromDesktop(false);
         int childCount = mShortcutsAndWidgets.getChildCount();
         if (childCount == 0) {
             return;
@@ -740,7 +734,7 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
         for (int i = 0; i < childCount; i++) {
             LayoutParams lp = (LayoutParams) views.get(i).getLayoutParams();
             lp.cellX = i;
-            mShortcutsAndWidgets.setupLp(lp);
+            mShortcutsAndWidgets.setupLp(lp, false);
             mOccupied.markCells(lp.cellX, 0, 1, 1, true);
             ItemInfo info = (ItemInfo) views.get(i).getTag();
             if (null != info && (info.cellX != lp.cellX)) {
@@ -1081,7 +1075,7 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
                 lp.tmpCellX = cellX;
                 lp.tmpCellY = cellY;
             }
-            clc.setupLp(lp);
+            clc.setupLp(lp, fromDesktop);
             lp.isLockedToGrid = false;
             final int newX = lp.x;
             final int newY = lp.y;
@@ -1270,8 +1264,10 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
                         return eventLeft - mCellWidth;
                     } else if (cellX == 1) {
                         return eventLeft;
-                    } else {
+                    } else if (cellX == 2) {
                         return eventLeft + mCellWidth;
+                    } else {
+                        return eventLeft + mCellWidth * 2;
                     }
                 } else {
                     if (cellX == 0) {
@@ -1664,21 +1660,59 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
     private int[] getBestXY(int childCount, int pixelX) {
         final int maxColCount = 9;
         int startX = (maxColCount - childCount) * mCellWidth / 2;
-        if (fromDesktop && childCount < maxColCount) {
-            return new int[]{0, 0};
+        if (fromDesktop && childCount == maxColCount) {
+            return new int[]{-1, -1};
         }
         switch (childCount) {
             case 0:
                 return new int[]{0, 0};
             case 1:
-                return new int[]{0, 0};
-            case 2:
-                if (pixelX <= startX + mCellWidth) {
-                    return new int[]{0, 0};
+                if (fromDesktop) {
+                    if (pixelX <= startX + mCellWidth / 2) {
+                        return new int[]{0, 0};
+                    } else {
+                        View child = mShortcutsAndWidgets.getChildAt(0);
+                        ((LayoutParams) child.getLayoutParams()).cellX = 0;
+                        mShortcutsAndWidgets.setupLp((LayoutParams) child.getLayoutParams(), fromDesktop);
+                        child.requestLayout();
+                        return new int[]{1, 0};
+                    }
                 } else {
-                    return new int[]{1, 0};
+                    return new int[]{0, 0};
+                }
+            case 2:
+                if (fromDesktop) {
+                    if (pixelX <= startX + mCellWidth) {
+                        return new int[]{0, 0};
+                    }
+                    if (pixelX > startX + mCellWidth && pixelX <= startX + mCellWidth * 2) {
+                        return new int[]{1, 0};
+                    } else {
+                        reOrderChild();
+                        return new int[]{2, 0};
+                    }
+                } else {
+                    if (pixelX <= startX + mCellWidth) {
+                        return new int[]{0, 0};
+                    } else {
+                        return new int[]{1, 0};
+                    }
                 }
             case 3:
+                if (fromDesktop) {
+                    if (pixelX <= startX + mCellWidth) {
+                        return new int[]{0, 0};
+                    }
+                    if (pixelX > startX + mCellWidth && pixelX <= startX + mCellWidth * 2) {
+                        return new int[]{1, 0};
+                    }
+                    if (pixelX > startX + mCellWidth * 2 && pixelX <= startX + mCellWidth * 3) {
+                        return new int[]{2, 0};
+                    } else {
+                        reOrderChild();
+                        return new int[]{3, 0};
+                    }
+                }
                 if (pixelX <= startX + mCellWidth) {
                     return new int[]{0, 0};
                 }
@@ -1688,6 +1722,23 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
                     return new int[]{2, 0};
                 }
             case 4:
+                if (fromDesktop) {
+                    if (pixelX <= startX + mCellWidth) {
+                        return new int[]{0, 0};
+                    }
+                    if (pixelX > startX + mCellWidth && pixelX <= startX + mCellWidth * 2) {
+                        return new int[]{1, 0};
+                    }
+                    if (pixelX > startX + mCellWidth * 2 && pixelX <= startX + mCellWidth * 3) {
+                        return new int[]{2, 0};
+                    }
+                    if (pixelX > startX + mCellWidth * 3 && pixelX < startX + mCellWidth * 4) {
+                        return new int[]{3, 0};
+                    } else {
+                        reOrderChild();
+                        return new int[]{4, 0};
+                    }
+                }
                 if (pixelX <= startX + mCellWidth) {
                     return new int[]{0, 0};
                 }
@@ -1700,6 +1751,26 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
                     return new int[]{3, 0};
                 }
             case 5:
+                if (fromDesktop) {
+                    if (pixelX <= startX + mCellWidth) {
+                        return new int[]{0, 0};
+                    }
+                    if (pixelX > startX + mCellWidth && pixelX <= startX + mCellWidth * 2) {
+                        return new int[]{1, 0};
+                    }
+                    if (pixelX > startX + mCellWidth * 2 && pixelX <= startX + mCellWidth * 3) {
+                        return new int[]{2, 0};
+                    }
+                    if (pixelX > startX + mCellWidth * 3 && pixelX < startX + mCellWidth * 4) {
+                        return new int[]{3, 0};
+                    }
+                    if (pixelX > startX + mCellWidth * 4 && pixelX < startX + mCellWidth * 5) {
+                        return new int[]{4, 0};
+                    } else {
+                        reOrderChild();
+                        return new int[]{5, 0};
+                    }
+                }
                 if (pixelX <= startX + mCellWidth) {
                     return new int[]{0, 0};
                 }
@@ -1715,6 +1786,29 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
                     return new int[]{4, 0};
                 }
             case 6:
+                if (fromDesktop) {
+                    if (pixelX <= startX + mCellWidth) {
+                        return new int[]{0, 0};
+                    }
+                    if (pixelX > startX + mCellWidth && pixelX <= startX + mCellWidth * 2) {
+                        return new int[]{1, 0};
+                    }
+                    if (pixelX > startX + mCellWidth * 2 && pixelX <= startX + mCellWidth * 3) {
+                        return new int[]{2, 0};
+                    }
+                    if (pixelX > startX + mCellWidth * 3 && pixelX < startX + mCellWidth * 4) {
+                        return new int[]{3, 0};
+                    }
+                    if (pixelX > startX + mCellWidth * 4 && pixelX < startX + mCellWidth * 5) {
+                        return new int[]{4, 0};
+                    }
+                    if (pixelX > startX + mCellWidth * 5 && pixelX < startX + mCellWidth * 6) {
+                        return new int[]{5, 0};
+                    } else {
+                        reOrderChild();
+                        return new int[]{6, 0};
+                    }
+                }
                 if (pixelX <= startX + mCellWidth) {
                     return new int[]{0, 0};
                 }
@@ -1733,6 +1827,32 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
                     return new int[]{5, 0};
                 }
             case 7:
+                if (fromDesktop) {
+                    if (pixelX <= startX + mCellWidth) {
+                        return new int[]{0, 0};
+                    }
+                    if (pixelX > startX + mCellWidth && pixelX <= startX + mCellWidth * 2) {
+                        return new int[]{1, 0};
+                    }
+                    if (pixelX > startX + mCellWidth * 2 && pixelX <= startX + mCellWidth * 3) {
+                        return new int[]{2, 0};
+                    }
+                    if (pixelX > startX + mCellWidth * 3 && pixelX < startX + mCellWidth * 4) {
+                        return new int[]{3, 0};
+                    }
+                    if (pixelX > startX + mCellWidth * 4 && pixelX < startX + mCellWidth * 5) {
+                        return new int[]{4, 0};
+                    }
+                    if (pixelX > startX + mCellWidth * 5 && pixelX < startX + mCellWidth * 6) {
+                        return new int[]{5, 0};
+                    }
+                    if (pixelX > startX + mCellWidth * 6 && pixelX < startX + mCellWidth * 7) {
+                        return new int[]{6, 0};
+                    } else {
+                        reOrderChild();
+                        return new int[]{7, 0};
+                    }
+                }
                 if (pixelX <= startX + mCellWidth) {
                     return new int[]{0, 0};
                 }
@@ -1754,6 +1874,35 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
                     return new int[]{6, 0};
                 }
             case 8:
+                if (fromDesktop) {
+                    if (pixelX <= startX + mCellWidth) {
+                        return new int[]{0, 0};
+                    }
+                    if (pixelX > startX + mCellWidth && pixelX <= startX + mCellWidth * 2) {
+                        return new int[]{1, 0};
+                    }
+                    if (pixelX > startX + mCellWidth * 2 && pixelX <= startX + mCellWidth * 3) {
+                        return new int[]{2, 0};
+                    }
+                    if (pixelX > startX + mCellWidth * 3 && pixelX < startX + mCellWidth * 4) {
+                        return new int[]{3, 0};
+                    }
+                    if (pixelX > startX + mCellWidth * 4 && pixelX < startX + mCellWidth * 5) {
+                        return new int[]{4, 0};
+                    }
+                    if (pixelX > startX + mCellWidth * 5 && pixelX < startX + mCellWidth * 6) {
+                        return new int[]{5, 0};
+                    }
+                    if (pixelX > startX + mCellWidth * 6 && pixelX < startX + mCellWidth * 7) {
+                        return new int[]{6, 0};
+                    }
+                    if (pixelX > startX + mCellWidth * 7 && pixelX < startX + mCellWidth * 8) {
+                        return new int[]{7, 0};
+                    } else {
+                        reOrderChild();
+                        return new int[]{8, 0};
+                    }
+                }
                 if (pixelX <= startX + mCellWidth) {
                     return new int[]{0, 0};
                 }
@@ -1806,6 +1955,16 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
                 }
         }
         return new int[]{-1, -1};
+    }
+
+    private void reOrderChild() {
+        int childCount = mShortcutsAndWidgets.getChildCount();
+        for (int i = 0; i < childCount; i++) {
+            View child = mShortcutsAndWidgets.getChildAt(i);
+            CellLayout.LayoutParams lp = (LayoutParams) child.getLayoutParams();
+            mShortcutsAndWidgets.setupLp(lp, fromDesktop);
+            child.requestLayout();
+        }
     }
 
     private int[] convertBestXY(int[] bestXY) {
@@ -3242,6 +3401,7 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
 
     public void setIsFromDesktop(boolean fromDesktop) {
         this.fromDesktop = fromDesktop;
+        mShortcutsAndWidgets.setIsFromDesktop(fromDesktop);
     }
 
     boolean existsEmptyCell(int itemType) {
@@ -3307,12 +3467,9 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
         if (child != null) {
             LayoutParams lp = (LayoutParams) child.getLayoutParams();
             lp.dropped = true;
-            if (isHotseat()) {
-                resetLayoutIndex();
-                return;
-            }
             child.requestLayout();
             markCellsAsOccupiedForView(child);
+            mLauncher.getHotseat().getLayout().resetLayoutIndex();
         }
     }
 
@@ -3505,10 +3662,10 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
         }
 
         public void setupForHotSeat(int cellWidth, int cellHeight, int widthGap, int heightGap,
-                                    boolean invertHorizontally, int colCount) {
+                                    boolean invertHorizontally, int colCount, boolean fromDesktop) {
 
-            if (colCount == 1) {
-                cellX = 0;
+            if (fromDesktop) {
+                colCount++;
             }
 
             if (isLockedToGrid) {

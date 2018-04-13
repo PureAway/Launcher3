@@ -2808,19 +2808,17 @@ public class Workspace extends PagedView
                             onCompleteRunnable, animationType, cell, false);
                 } else {
                     int duration = snapScreen < 0 ? -1 : ADJACENT_SCREEN_DROP_DURATION;
-                    mLauncher.getDragLayer().animateViewIntoPosition(d.dragView, cell, duration,
-                            onCompleteRunnable, this);
+                    if (isFromDesktop && mLauncher.isHotseatLayout(dropTargetLayout)) {
+                        mLauncher.getDragLayer().animateViewIntoPosition(d.dragView, cell, duration,
+                                onCompleteRunnable, this, true);
+                    } else {
+                        mLauncher.getDragLayer().animateViewIntoPosition(d.dragView, cell, duration,
+                                onCompleteRunnable, this, false);
+                    }
                 }
             } else {
                 d.deferDragViewCleanupPostAnimation = false;
                 cell.setVisibility(VISIBLE);
-            }
-            // modify
-            if (dropTargetLayout.isHotseat()
-                    && dropTargetLayout.getShortcutsAndWidgets().getChildCount() == 9
-                    && cell != null) {
-                CellLayout.LayoutParams lp = (CellLayout.LayoutParams) cell.getLayoutParams();
-                lp.cellX = mTargetCell[0];
             }
             parent.onDropChild(cell);
         }

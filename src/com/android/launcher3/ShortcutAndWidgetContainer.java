@@ -93,10 +93,10 @@ public class ShortcutAndWidgetContainer extends ViewGroup {
     }
 
 
-    public void setupLp(CellLayout.LayoutParams lp) {
+    public void setupLp(CellLayout.LayoutParams lp, boolean isFromDesktop) {
         if (mIsHotseatLayout) {
             lp.setupForHotSeat(mCellWidth, mCellHeight, mWidthGap, mHeightGap, invertLayoutHorizontally(),
-                    getChildCount());
+                    getChildCount(), isFromDesktop);
             return;
         }
         lp.setup(mCellWidth, mCellHeight, mWidthGap, mHeightGap, invertLayoutHorizontally(),
@@ -124,6 +124,14 @@ public class ShortcutAndWidgetContainer extends ViewGroup {
                 grid.hotseatCellHeightPx : grid.cellHeightPx);
     }
 
+
+    private boolean isFromDesktop = false;
+
+    public void setIsFromDesktop(boolean isFromDesktop) {
+        this.isFromDesktop = isFromDesktop;
+    }
+
+
     public void measureChild(View child) {
         final DeviceProfile grid = mLauncher.getDeviceProfile();
         final int cellWidth = mCellWidth;
@@ -132,7 +140,7 @@ public class ShortcutAndWidgetContainer extends ViewGroup {
         if (!lp.isFullscreen) {
             if (mIsHotseatLayout) {
                 lp.setupForHotSeat(mCellWidth, mCellHeight, mWidthGap, mHeightGap, invertLayoutHorizontally(),
-                        getChildCount());
+                        getChildCount(), isFromDesktop);
             } else {
                 lp.setup(cellWidth, cellHeight, mWidthGap, mHeightGap, invertLayoutHorizontally(),
                         mCountX);
@@ -203,13 +211,18 @@ public class ShortcutAndWidgetContainer extends ViewGroup {
 //                }
 //            }
 //        } else {
+
         int count = getChildCount();
+
         for (int i = 0; i < count; i++) {
             final View child = getChildAt(i);
             if (child.getVisibility() != GONE) {
                 CellLayout.LayoutParams lp = (CellLayout.LayoutParams) child.getLayoutParams();
                 int childLeft = lp.x;
                 int childTop = lp.y;
+//                if (mIsHotseatLayout) {
+//                    Log.e("ZCY", childLeft + "");
+//                }
                 child.layout(childLeft, childTop, childLeft + lp.width, childTop + lp.height);
 
                 if (lp.dropped) {

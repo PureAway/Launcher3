@@ -71,7 +71,7 @@ public class Hotseat extends FrameLayout
         mLauncher = Launcher.getLauncher(context);
         mHasVerticalHotseat = mLauncher.getDeviceProfile().isVerticalBarLayout();
         mBackgroundColor = ColorUtils.setAlphaComponent(
-                ContextCompat.getColor(context, R.color.hot_seat_bg_color), 120);
+                ContextCompat.getColor(context, R.color.hot_seat_bg_color), 160);
         mBackground = new ColorDrawable(mBackgroundColor);
         mBackground.setBounds(0, 2, getWidth(), getHeight());
         setBackground(mBackground);
